@@ -1,5 +1,5 @@
 from nltk.tokenize.regexp import RegexpTokenizer
-
+import os
 
 # 모든 instruction의 정보를 관리하는 클래스. instruction data들을 저장한다
 # 또한 instruction 관련 연산, 예를 들면 목록을 구축하는 함수, 관련 정보를 제공하는 함수 등을 제공 한다.
@@ -17,20 +17,13 @@ class InstTable:
         # 파일을 읽어 한 줄씩 저장할 list init
         self.lines = []
         self.readInst = []
-        # method
-        # self.openFile()
-        # self.setInstruction()
-        # self.getLines()
-        # self.printInstMap()
-        # self.searchFormat()
-        # self.searchOpcode()
-
 
 
 
     # 입력받은 이름의 파일을 열고 해당 내용을 파싱하여 instMap에 저장한다.
     def openFile(self, fileName) :
-        f = open(fileName, 'r')
+        path = os.getcwd()
+        f = open(path+fileName, 'r')
         line_num = 0
         line = f.readline()
         while line :
@@ -44,7 +37,7 @@ class InstTable:
     def setInstruction(self) :
         #instruction class를 초기화하면서 라인별로 넣어서 parsing
 
-        for line in lines :
+        for line in self.lines :
             self.readInsts = Instruction(line)
             self.instMap[Instruction[0]] = Instruction
 
@@ -112,7 +105,7 @@ class Instruction :
     def parsing(self, line) :
 
         # 매개로 들어온 line을 tab 단위로 잘라 tokens list에 저장
-        tokenizer = ("\t")
+        tokenizer = "\t"
         tokens = tokenizer.tokenize(line)
 
         count = 0

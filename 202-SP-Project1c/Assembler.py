@@ -1,8 +1,7 @@
-import InstTable
-import LiteralTable
+from InstTable import *
+from LiteralTable import *
 from SymbolTable import *
-import TokenTable
-
+from TokenTable import TokenTable
 
 '''
  * Assembler :
@@ -26,12 +25,13 @@ import TokenTable
 '''
 
 
-class Assembler :
+class Assembler:
     '''
      * 클래스 초기화. instruction Table을 초기화와 동시에 세팅한다.
      * @param instFile : instruction 명세를 작성한 파일 이름.
     '''
-    def __init__(self) :
+
+    def __init__(self):
         # instruction 명세를 저장한 공간
         self.instTable = InstTable()
 
@@ -51,20 +51,14 @@ class Assembler :
         # Token, 또는 지시어에 따라 만들어진 오브젝트 코드들을 출력 형태로 저장하는 공간.
         self.codeList = []
 
-
-
-
-
-
     '''
      * inputFile을 읽어들여서 lineList에 저장한다.
      * @param inputFile : input 파일 이름.
     '''
-    def loadInputFile(self, inputFile) :
+
+    def loadInputFile(self, inputFile):
         self.inputTable.openFile(inputFile)
         self.lineList = self.inputTable.getLines()
-
-
 
     '''
      * pass1 과정을 수행한다.
@@ -73,233 +67,176 @@ class Assembler :
      *
      *    주의사항 : SymbolTable과 LiteralTable과 TokenTable은 프로그램의 section별로 하나씩 선언되어야 한다.
     '''
-    def pass1(self) :
+
+    def pass1(self):
 
         section = -1;
 
-        for line in self.lineList :
-            if line.find('START') or line.find('CSECT') :
+        for line in self.lineList:
+            if line.find('START') or line.find('CSECT'):
                 section += 1;
                 self.symtabList[section] = SymbolTable()
                 self.leteraltabList[section] = LiteralTable()
-                self.tokenList[section] = TokenTable(symbolTables[section], literalTables[section], instTable);
+                self.tokenList[section] = TokenTable(self.symbolTables[section], self.literalTables[section],
+                                                     self.instTable)
 
-            self.tokenList[section].putToken(line);
+            self.tokenList[section].putToken(line)
 
-        }
-
-        for(SymbolTable st : symbolTables)
-            symtabList.add(st);
-
-        for(LiteralTable lt : literalTables)
-            literaltabList.add(lt);
-
-        for(TokenTable tt : tokenTables)
-            TokenList.add(tt);
-
-        //tokenTables[0].printTokenList();
-        //tokenTables[1].printTokenList();
-        //tokenTables[2].printTokenList();
-    }
-
-    '''
+    """
      * 작성된 SymbolTable들을 출력형태에 맞게 출력한다.
      * @param fileName : 저장되는 파일 이름
-    '''
-    private void printSymbolTable(String fileName) {
-        File file = new File(fileName);
-        FileWriter writer = null;
-        try{
-            writer = new FileWriter(file, false);
-            for(SymbolTable st : symtabList){
-                int count = 0;
-                for(String symbol : st.symbolList) {
-                    writer.write(symbol + "\t" + Integer.toHexString(st.locationList.get(count)) + "\n");
-                    count++;
-                }
-                writer.write("\n");
-            }
-            writer.close();
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-    }
+    """
+
+    def printSymbolTable(self, fileName):
+
+        file = open(fileName, mode='w', encoding='utf-8')
+
+        for st in self.symtabList:
+            count = 0
+            for symbol in st.symbolList:
+                file.write(symbol + "\t" + format(st.locationList.get(count), 'X') + "\n")
+                count = + 1
+
+            file.write("\n")
 
     '''
      * 작성된 LiteralTable들을 출력형태에 맞게 출력한다.
      * @param fileName : 저장되는 파일 이름
     '''
-    private void printLiteralTable(String fileName) {
-        File file = new File(fileName);
-        FileWriter writer = null;
-        try{
-            writer = new FileWriter(file, false);
-            for(LiteralTable lt : literaltabList){
-                int count = 0;
-                for(String literal : lt.literalList) {
-                    int last = literal.length() -1;
-                    writer.write(literal.substring(3, last) + "\t" + Integer.toHexString(lt.locationList.get(count)) + "\n");
-                    count++;
-                }
-            }
-            writer.close();
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-    }
+
+    def printLiteralTable(self, fileName):
+
+        file = open(fileName, mode='w', encoding='utf-8')
+
+        for lt in self.literaltabList:
+            count = 0
+            for literal in lt.literalList:
+                file.write(literal[3:-1] + "\t" + format(lt.locationList.get(count), 'X') + "\n")
+                count += 1
 
     '''
      * pass2 과정을 수행한다.
      *   1) 분석된 내용을 바탕으로 object code를 생성하여 codeList에 저장.
     '''
-    private void pass2() {
-        for(TokenTable tt : TokenList){
-            int count = 0;
-            for(Token t : tt.tokenList){
-                tt.makeObjectCode(count);
-                count++;
-            }
-        }
-    }
+
+    def pass2(self):
+        for tt in self.TokenList:
+            count = 0
+            for t in tt.tokenList:
+                tt.makeObjectCode(count)
+                count += 1
 
     '''
      * 작성된 codeList를 출력형태에 맞게 출력한다.
      * @param fileName : 저장되는 파일 이름
     '''
-    private void printObjectCode(String fileName) {
-        int endCount = 1;
 
-        for(TokenTable tokT : TokenList){
-            int count = 0;
-            codeList.add(String.format("H%s\t000000%06X",tokT.getToken(count).label,tokT.locCount));
-            int lineLength = 0; //T line에서 쓸 것
-            String tempContent = ""; //T line에서 쓸 것
-            String tempName = "";
-            ArrayList<String> REFlist = new ArrayList<String>();
-            ArrayList<String> Mlist = new ArrayList<String>();
+    def printObjectCode(self, fileName):
+        endCount = 1
 
-            for(Token t : tokT.tokenList){
-                //D Line
-                if(!tokT.getToken(count).operator.equals("") && tokT.getToken(count).operator.equals("EXTDEF")){
-                    String temp = "D";
-                    for(String oprand : tokT.getToken(count).operand){
-                        temp += oprand;
-                        temp += String.format("%06X", tokT.symTab.search(oprand));
-                    }
-                    codeList.add(temp);
-                }
+        for tokT in self.TokenList:
+            count = 0
+            self.codeList.append("H%s\t000000%06X" % (tokT.getToken(count).label, tokT.locCount))
+            lineLength = 0  # T line에서 쓸 것
+            tempContent = ""  # T line에서 쓸 것
+            tempName = ""
+            REFlist = []
+            Mlist = []
 
-                //R Line
-                else if(!tokT.getToken(count).operator.equals("") && tokT.getToken(count).operator.equals("EXTREF")){
-                    String temp = "R";
-                    for(String oprand : tokT.getToken(count).operand){
-                        if(oprand != null) {
-                            REFlist.add(oprand);
-                            temp += oprand;
-                        }
-                    }
-                    codeList.add(temp);
-                }
+            for t in tokT.tokenList:
+                # D Line
+                if tokT.getToken(count).operator != "" and tokT.getToken(count).operator == "EXTDEF":
+                    temp = "D"
+                    for oprand in tokT.getToken(count).operand:
+                        temp += oprand
+                        temp += "%06X" % tokT.symTab.search(oprand)
 
-                //T Line
-                else if(!tokT.getToken(count).operator.equals("") && tokT.getObjectCode(count) != null || !tempContent.equals("")){
-
-                    //M line prepare
-                    String[] except = tokT.getToken(count).operand[0].split("-"); //befend-buffer 처리
-                    if(REFlist.contains(tokT.getToken(count).operand[0])){
-                        String line = String.format("M%06X05+%s", tokT.getToken(count).location+1,tokT.getToken(count).operand[0]);
-                        Mlist.add(line);
-                    }
-                    else if(REFlist.contains(except[0])){
-                        String line1 = String.format("M%06X06+%s", tokT.getToken(count).location,except[0]);
-                        String line2 = String.format("M%06X06-%s", tokT.getToken(count).location,except[1]);
-                        Mlist.add(line1);
-                        Mlist.add(line2);
-                    }
+                    self.codeList.append(temp)
 
 
-                    if(tokT.getObjectCode(count) == null){
-                        String temp = String.format("%s%02X%s", tempName, tempContent.length()/2, tempContent);
-                        codeList.add(temp);
-                        tempContent = "";
-                    }
+                # R Line
+                elif tokT.getToken(count).operator != "" and tokT.getToken(count).operator == "EXTREF":
+                    temp = "R"
+                    for oprand in tokT.getToken(count).operand:
+                        if oprand != "":
+                            REFlist.append(oprand)
+                            temp += oprand
 
-                    else if (lineLength < 57){
-                        if(tempContent.equals("")){
-                            tempName = "T";
-                            tempName = String.format("%s%06X", tempName, tokT.getToken(count).location);
-                            tempContent = tokT.getObjectCode(count);
-                        }
-
-                        else {
-                            tempContent += tokT.getObjectCode(count);
-                            if(tokT.tokenList.size() == count+1){
-                                if(!tempContent.equals("")){
-                                    String temp = String.format("%s%02X%s", tempName, tempContent.length()/2, tempContent);
-                                    codeList.add(temp);
-                                    tempContent = "";
-                                    lineLength = 0;
-                                }
-
-                            }
-                        }
-
-                        lineLength += tokT.getToken(count).byteSize;
-                    }
-                    else {
-                        String temp = String.format("%s%02X%s", tempName, tempContent.length()/2, tempContent);
-                        codeList.add(temp);
-                        lineLength = 0;
-                        tempContent = "";
-
-                        //라인 꽉 차서 못들어 간 것 초기화 후에 다시 넣어주기
-                        if(tempContent.equals("")){
-                            tempName = "T";
-                            tempName = String.format("%s%06X", tempName, tokT.getToken(count).location);
-                            tempContent = tokT.getObjectCode(count);
-                        }
-                        else
-                            tempContent += tokT.getObjectCode(count);
-                        lineLength += tokT.getToken(count).byteSize;
-                    }
-
-                }
-
-                count++;
-            }
-
-            //M line
-            for(String mLine : Mlist){
-                codeList.add(mLine);
-            }
-
-            //E line
-            if(endCount == 1){
-                codeList.add("E000000");
-                endCount = 0;
-            }
-            else
-                codeList.add("E");
-
-            codeList.add("\n");
-        }
-
-        File file = new File(fileName);
-        FileWriter writer = null;
-        try{
-            writer = new FileWriter(file, false);
-            for(String s : codeList){
-
-                writer.write(s + "\n");
-
-            }
-            writer.close();
-        }catch(IOException e){
-            e.printStackTrace();
-        }
-
-    }
-
-}
+                    self.codeList.append(temp)
 
 
+                # T Line
+                elif tokT.getToken(count).operator != "" and tokT.getObjectCode(count) != "" or tempContent != "":
+
+                    # M line prepare
+                    exceptStr = tokT.getToken(count).operand[0].split("-")  # befend-buffer 처리
+                    if REFlist.contains(tokT.getToken(count).operand[0]):
+                        line = "M%06X05+%s" % (tokT.getToken(count).location + 1, tokT.getToken(count).operand[0])
+                        Mlist.append(line)
+
+                elif REFlist.contains(exceptStr[0]):
+                    line1 = "M%06X06+%s" % (tokT.getToken(count).location, exceptStr[0])
+                    line2 = "M%06X06-%s" % (tokT.getToken(count).location, exceptStr[1])
+                    Mlist.append(line1)
+                    Mlist.append(line2)
+
+                    if tokT.getObjectCode(count) == "":
+                        temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                        self.codeList.append(temp)
+                        tempContent = ""  # init
+
+
+                elif lineLength < 57:
+                    if tempContent == "":
+                        tempName = "T"
+                        tempName = "%s%06X" % (tempName, tokT.getToken(count).location)
+                        tempContent = tokT.getObjectCode(count)
+
+
+                    else:
+                        tempContent += tokT.getObjectCode(count)
+                        if len(tokT.tokenList) == count + 1:
+                            if tempContent != "":
+                                temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                                self.codeList.append(temp)
+                                tempContent = ""
+                                lineLength = 0
+
+                    lineLength += tokT.getToken(count).byteSize
+
+                else:
+                    temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                    self.codeList.append(temp)
+                    lineLength = 0
+                    tempContent = ""
+
+                    # 라인 꽉 차서 못들어 간 것 초기화 후에 다시 넣어주기
+                    if tempContent == "":
+                        tempName = "T"
+                        tempName = "%s%06X" % (tempName, tokT.getToken(count).location)
+                        tempContent = tokT.getObjectCode(count)
+
+                    else:
+                        tempContent += tokT.getObjectCode(count)
+                    lineLength += tokT.getToken(count).byteSize
+
+                count += 1
+
+            # M line
+            for mLine in Mlist:
+                self.codeList.append(mLine)
+
+            # E line
+            if endCount == 1:
+                self.codeList.append("E000000")
+                endCount = 0
+
+            else:
+                self.codeList.append("E")
+
+            self.codeList.append("\n")
+
+        file = open(fileName, mode='w', encoding='utf-8')
+
+        for s in self.codeList:
+            file.write(s + "\n")

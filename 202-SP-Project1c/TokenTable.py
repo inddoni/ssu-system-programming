@@ -6,10 +6,11 @@ from nltk.tokenize.regexp import RegexpTokenizer
  * section 마다 인스턴스가 하나씩 할당된다.
  *
 """
-class TokenTable :
-    MAX_OPERAND=3
-    locCount = 0 #location counter 전역 변수 선언
 
+
+class TokenTable:
+    MAX_OPERAND = 3
+    locCount = 0  # location counter 전역 변수 선언
 
     # bit 조작의 가독성을 위한 선언 (static)
     nFlag = 32
@@ -19,306 +20,289 @@ class TokenTable :
     pFlag = 2
     eFlag = 1
 
-
     '''
      * 초기화하면서 symTable과 literalTable과 instTable을 링크시킨다.
      * @param symTab : 해당 section과 연결되어있는 symbol table
      * @param literalTab : 해당 section과 연결되어있는 literal table
      * @param instTab : instruction 명세가 정의된 instTable
     '''
+
     def __init__(self, symTab, literalTab, instTab):
         # Token을 다룰 때 필요한 테이블들을 링크시킨다.
         self.symTab = symTab
         self.literalTab = literalTab;
         self.instTab = instTab;
-        self.literCheck = []     # String
+        self.literCheck = []  # String
 
         # 각 line을 의미별로 분할하고 분석하는 공간.
-        self.tokenList = []      # tokenList 생성
-
-        # 주소값계산
-        self.locCount = 0
-
+        self.tokenList = []  # tokenList 생성
 
     '''
      * 일반 문자열을 받아서 Token단위로 분리시켜 tokenList에 추가한다.
      * @param line : 분리되지 않은 일반 문자열
     '''
-    def putToken(line) :
+
+    def putToken(self, line):
         tok = Token()
         tok.parsing(line)
-        tok.setLocation(locCount);
-        tokenList.add(tok);
-        #해당 라인의 토큰파싱이 끝나고 Symbol이 있으면 추가해주기
-        if(!tok.label.equals(".") && !tok.label.equals(" ") && !tok.label.equals(null)){
-            symTab.putSymbol(tok.label, tok.location);
-        }
-        #해당 라인의 토큰파싱이 끝나고 literal이 있으면 추가해주기
-        if(!tok.operand[0].equals("") && tok.operand[0].contains("=")){
-            literalTab.putLiteral(tok.operand[0], tok.location);
-            literCheck.add(tok.operand[0]);
-        }
-        #해당 라인의 토큰파싱이 끝나고 nixbpe 설정해주기
-        if(instTab.searchOpcode(tok.operator) > 0 || tok.operator.equals("LDA")){
-            if(instTab.searchFormat(tok.operator) < 3)
-                tok.nixbpe = 0;
-            #format이 3이상인 것만 nixbpe 셋팅
-            else{
-                #n, i flag 설정
-                if(tok.operand[0].charAt(0) == '#'){
-                    tok.setFlag(nFlag, 0);
-                    tok.setFlag(iFlag, 1);
-                }
-                else if(tok.operand[0].charAt(0) == '@'){
-                    tok.setFlag(nFlag, 1);
-                    tok.setFlag(iFlag, 0);
-                }
-                else {
-                    tok.setFlag(nFlag, 1);
-                    tok.setFlag(iFlag, 1);
-                }
-                #x flag 설정
-                if(tok.operand[1]!=null && tok.operand[1].contains("X"))
-                    tok.setFlag(xFlag, 1);
-                else
-                    tok.setFlag(xFlag,0);
+        tok.setLocation(self.locCount)
+        self.tokenList.append(tok)
 
-                #p flag 설정
-                if(tok.operand[0].charAt(0) != '#' && tok.operator.charAt(0) != '+' && !tok.operator.equals("RSUB"))
-                    tok.setFlag(pFlag,1);
-                else
-                    tok.setFlag(pFlag, 0);
+        # 해당 라인의 토큰파싱이 끝나고 Symbol이 있으면 추가해주기
+        if tok.label != "." and tok.label != " " and tok.label != "":
+            self.symTab.putSymbol(tok.label, tok.location);
 
-                #e flag 설정
-                if(tok.operator.charAt(0) == '+')
-                    tok.setFlag(eFlag,1);
-                else
-                    tok.setFlag(eFlag,0);
-            }
-            #System.out.println(tok.operator + "  " + tok.operand[1] + "  " + Integer.toHexString(tok.nixbpe));
-        }
-        #해당 라인의 토큰파싱이 끝나고 operator를 확인해서 locCount 값 계산해주기
-        int locationlen = calcLocation(tok);
-        if(locationlen > 0)
-            locCount += locationlen;
+        # 해당 라인의 토큰파싱이 끝나고 literal이 있으면 추가해주기
+        if tok.operand[0] != "" and tok.operand[0].find("="):
+            self.literalTab.putLiteral(tok.operand[0], tok.location)
+            self.literCheck.append(tok.operand[0])
 
-    }
+        # 해당 라인의 토큰파싱이 끝나고 nixbpe 설정해주기
+        if self.instTab.searchOpcode(tok.operator) > 0 or tok.operator == "LDA":
+            if self.instTab.searchFormat(tok.operator) < 3:
+                tok.nixbpe = 0
+            # format이 3이상인 것만 nixbpe 셋팅
+            else:
+                # n, i flag 설정
+                if tok.operand[0][0] == '#':
+                    tok.setFlag(self.nFlag, 0)
+                    tok.setFlag(self.iFlag, 1)
+                elif tok.operand[0][0] == '@':
+                    tok.setFlag(self.nFlag, 1)
+                    tok.setFlag(self.iFlag, 0)
+                else:
+                    tok.setFlag(self.nFlag, 1)
+                    tok.setFlag(self.iFlag, 1)
 
-    public int calcLocation(Token token){
-        int len = instTab.searchFormat(token.operator);
-        if(len > 0)
-            return len;
-        else{
-            if(token.operator.equals("RESW") || token.operator.equals("WORD")){
-                len = 3;
-            }
-            else if(token.operator.equals("RESB")){
-                len = Integer.parseInt(token.operand[0]);
-            }
-            else if(token.operator.equals("BYTE")){
-                len = 1;
-            }
-            else if(token.operator.equals("LTORG")){
-                len = literalTab.literalCount;
-                literalTab.literalCount = 0;
-                int count = 0;
-                for(String litCheck : literCheck){
-                    literalTab.modifyLiteral(litCheck, locCount+(count*len));
-                    count++;
-                }
-            }
-            else if(token.operator.equals("END")){
-                len = literalTab.literalCount;
-                literalTab.literalCount = 0;
-                int count = 0;
-                for(String litCheck : literCheck){
-                    literalTab.modifyLiteral(litCheck, token.location);
-                    count++;
-                }
-            }
-            else if(token.operator.equals("EQU")){
-                if(token.operand[0].equals("*")){
-                    len = 0;
-                }
-                else{
-                    StringTokenizer st = new StringTokenizer(token.operand[0],"-");
-                    int value1 = symTab.search(st.nextToken());
-                    int value2 = symTab.search(st.nextToken());
-                    len = value1 - value2;
-                    symTab.modifySymbol(token.label, len);
-                    len = 0;
-                }
-            }
-            else{
-                len = -1;
-            }
-            return len;
-        }
-    }
+                # x flag 설정
+                if tok.operand[1] != "" and tok.operand[1].find("X"):
+                    tok.setFlag(self.xFlag, 1)
+                else:
+                    tok.setFlag(self.xFlag, 0)
 
-    public void printTokenList(){
-        for(Token t : tokenList){
-            System.out.println(Integer.toHexString(t.location) + "\t" + t.label + "\t" + t.operator + "\t" + t.operand[0]);
-        }
-    }
+                # p flag 설정
+                if tok.operand[0][0] != '#' and tok.operator[0] != '+' and tok.operator != "RSUB":
+                    tok.setFlag(self.pFlag, 1)
+                else:
+                    tok.setFlag(self.pFlag, 0)
+
+                # e flag 설정
+                if tok.operator[0] == '+':
+                    tok.setFlag(self.eFlag, 1)
+                else:
+                    tok.setFlag(self.eFlag, 0)
+
+            # print(tok.operator + "  " + tok.operand[1] + "  " + Integer.toHexString(tok.nixbpe))
+
+        # 해당 라인의 토큰파싱이 끝나고 operator를 확인해서 locCount 값 계산해주기
+        locationlen = self.calcLocation(tok)
+        if locationlen > 0:
+            self.locCount += locationlen
+
+    def calcLocation(self, token):
+        len = self.instTab.searchFormat(token.operator)
+        if len > 0:
+            return len
+        else:
+            if token.operator == "RESW" or token.operator == "WORD":
+                len = 3
+
+            elif token.operator == "RESB":
+                len = int(token.operand[0])
+
+
+            elif token.operator == "BYTE":
+                len = 1
+
+
+            elif token.operator == "LTORG":
+                len = self.literalTab.literalCount
+                self.literalTab.setLiteralCount(0)
+                count = 0
+                for litCheck in self.literCheck:
+                    self.literalTab.modifyLiteral(litCheck, self.locCount + (count * len))
+                    count += 1
+
+            elif token.operator == "END":
+                len = self.literalTab.literalCount
+                self.literalTab.setLiteralCount(0)
+                count = 0
+                for litCheck in self.literCheck:
+                    self.literalTab.modifyLiteral(litCheck, token.location)
+                    count += 1
+
+            elif token.operator == "EQU":
+                if token.operand[0] == "*":
+                    len = 0
+
+                else:
+                    tokenizer = "-"
+                    tokens = tokenizer.tokenize(token.operand[0])
+
+                    value1 = self.symTab.search(tokens[0])
+                    value2 = self.symTab.search(tokens[1])
+                    len = value1 - value2
+                    self.symTab.modifySymbol(token.label, len)
+                    len = 0
+
+            else:
+                len = -1
+
+        return len
+
+    def printTokenList(self):
+        for t in self.tokenList:
+            print(format(int(t.location), 'X') + "\t" + t.label + "\t" + t.operator + "\t" + t.operand[0])
 
     '''
      * tokenList에서 index에 해당하는 Token을 리턴한다.
      * @param index
      * @return : index번호에 해당하는 코드를 분석한 Token 클래스
     '''
-    public Token getToken(int index) {
-        return tokenList.get(index);
-    }
 
-    public void setBytes(int index, int num){
-        tokenList.get(index).byteSize = num;
-    }
+    def getToken(self, index):
+        return self.tokenList[index]
 
-    public void setObjcode(int index, String objCode){
-        tokenList.get(index).objectCode = objCode;
-    }
+    def setBytes(self, index, num):
+        self.tokenList[index].setByteSize(num)
 
-    /**
+    def setObjcode(self, index, objCode):
+        self.tokenList[index].setObjectCode(objCode)
+
+    """
      * Pass2 과정에서 사용한다.
      * instruction table, symbol table literal table 등을 참조하여 objectcode를 생성하고, 이를 저장한다.
      * @param index
-     */
-    public void makeObjectCode(int index){
+    """
 
-        String resultOb = "";
-        if(instTab.searchFormat(getToken(index).operator) == 2){
-            setBytes(index, 4);
-            int opcode = instTab.searchOpcode(getToken(index).operator);
-            String opcodeStr = Integer.toHexString(opcode).toUpperCase();
-            resultOb += opcodeStr;
-            int i = 0;
-            while(getToken(index).operand[i] != null){
-                if(getToken(index).operand[i].equals("X"))
-                    resultOb += "1";
-                else if(getToken(index).operand[i].equals("A"))
-                    resultOb += "0";
-                else if(getToken(index).operand[i].equals("S"))
-                    resultOb += "4";
-                else //T인 경우
-                    resultOb += "5";
-                i++;
-            }
-            if(resultOb.length() < getToken(index).byteSize)
-                resultOb += "0";
-            setObjcode(index, resultOb);
-        }
-        else if(instTab.searchFormat(getToken(index).operator) == 3) {
-            setBytes(index, 6);
-            int disA = 0;
-            int opcode = instTab.searchOpcode(getToken(index).operator);
-            String oprand = getToken(index).operand[0];
+    def makeObjectCode(self, index):
 
-            if(oprand.charAt(0)=='@')
-                oprand = oprand.substring(1,oprand.length());
+        resultOb = ""
 
-            if(oprand.charAt(0)=='#'){
-                disA = Integer.parseInt(oprand.substring(1,oprand.length()));
-            }
-            else if(oprand.charAt(0) == '='){
-                int TA = this.literalTab.search(oprand);
-                int PA = getToken(index+1).location;
-                disA = TA - PA;
-            }
-            else{
+        if self.instTab.searchFormat(self.getToken(index).operator) == 2:
+            self.setBytes(index, 4)
+            opcode = self.instTab.searchOpcode(self.getToken(index).operator)
+            opcodeStr = format(opcode, 'X')
+            resultOb += opcodeStr
+            i = 0
+            while self.getToken(index).operand[i] != "":
+                if self.getToken(index).operand[i] == "X":
+                    resultOb += "1"
+                elif self.getToken(index).operand[i] == "A":
+                    resultOb += "0"
+                elif self.getToken(index).operand[i] == "S":
+                    resultOb += "4"
+                else:  # T인 경우
+                    resultOb += "5"
+                i += 1
 
-                int TA = this.symTab.search(oprand);
-                int PA = getToken(index+1).location;
-                disA = TA - PA;
-            }
+            if len(resultOb) < self.getToken(index).byteSize:
+                resultOb += "0"
 
-            # object code 앞부분 처리
-            int calcObjCode = opcode * 16 + getToken(index).nixbpe;
-            if(Integer.toHexString(calcObjCode).length() < 3)
-                resultOb += "0";
-            resultOb += Integer.toHexString(calcObjCode).toUpperCase();
+            self.setObjcode(index, resultOb)
 
-            # object code 뒷부분 처리
-            if(opcode == 76) //RSUB 처리
-                resultOb += "000";
+        elif self.instTab.searchFormat(self.getToken(index).operator) == 3:
+            self.setBytes(index, 6)
+            disA = 0
+            opcode = self.instTab.searchOpcode(self.getToken(index).operator)
+            oprand = self.getToken(index).operand[0]
 
-            else if(Integer.toHexString(disA).length() < 3){
-                for(int i = 0; i < 3-Integer.toHexString(disA).length(); i++)
-                    resultOb += "0";
-                resultOb += Integer.toHexString(disA).toUpperCase();
-            }
-            else if (disA < 0){
-                String str = Integer.toHexString(disA).toUpperCase();
-                str = str.substring(str.length()-3, str.length());
-                resultOb += str;
-            }
-            else {
-                System.out.println("disA error");
-            }
-            setObjcode(index, resultOb);
-        }
+            if oprand[0] == '@':
+                oprand = oprand[1:]
 
-        else if(instTab.searchFormat(getToken(index).operator) == 4) {
-            setBytes(index, 8);
-            String disA="00000";
-            int opcode = instTab.searchOpcode(getToken(index).operator);
+            elif oprand[0] == '#':
+                disA = int(oprand[1:0])
+
+            elif oprand[0] == '=':
+                TA = self.literalTab.search(oprand)
+                PA = self.getToken(index + 1).location
+                disA = TA - PA
+
+            else:
+                TA = self.symTab.search(oprand)
+                PA = self.getToken(index + 1).location
+                disA = TA - PA
 
             # object code 앞부분 처리
-            int calcObjCode = opcode * 16 + getToken(index).nixbpe;
-            if(opcode == 0) //LDA일 때, 예외처리
-                resultOb += "0";
-            resultOb += Integer.toHexString(calcObjCode).toUpperCase();
+            calcObjCode = opcode * 16 + self.getToken(index).nixbpe
+            if len(format(calcObjCode, 'X')) < 3:
+                resultOb += "0"
+            resultOb += format(calcObjCode, 'X')
 
             # object code 뒷부분 처리
-            resultOb += disA;
+            if opcode == 76:  # RSUB 처리
+                resultOb += "000"
 
-            setObjcode(index, resultOb);
-        }
+            elif len(format(disA, 'X')) < 3:
+                str = "0" * (3 - len(format(disA, 'X')))
+                resultOb += str
+                resultOb += format(disA, 'X')
 
-        else if(getToken(index).operator.equals("LTORG") || getToken(index).operator.equals("END")){
-            resultOb += literalTab.getlitAscii(getToken(index).location);
-            setBytes(index, resultOb.length());
-            setObjcode(index, resultOb);
-        }
+            elif disA < 0:  # 음수인 경우
+                str = format(disA, 'X')
+                str = str[-3:]  # 뒤에서 3글자만 가져오도록 함
+                resultOb += str
+            else:
+                print("disA error")
 
-        else if(getToken(index).operator.equals("BYTE")){
-            resultOb += getToken(index).operand[0].substring(2, 4);
-            setBytes(index, 2);
-            setObjcode(index, resultOb);
-        }
+            self.setObjcode(index, resultOb)
 
-        else if(getToken(index).operator.equals("WORD")){
-            resultOb += "000000";
-            setBytes(index, 6);
-            setObjcode(index, resultOb);
-        }
 
-        #test print
-        #System.out.println(index + "   " + getToken(index).operator + "   " + getToken(index).objectCode);
-    }
+        elif self.instTab.searchFormat(self.getToken(index).operator) == 4:
+            self.setBytes(index, 8)
+            disA = "00000"
+            opcode = self.instTab.searchOpcode(self.getToken(index).operator)
 
-    '''
+            # object code 앞부분 처리
+            calcObjCode = opcode * 16 + self.getToken(index).nixbpe
+            if opcode == 0:  # LDA일 때, 예외처리
+                resultOb += "0"
+            resultOb += format(calcObjCode, 'X')
+
+            # object code 뒷부분 처리
+            resultOb += disA
+
+            self.setObjcode(index, resultOb)
+
+
+        elif self.getToken(index).operator == "LTORG" or self.getToken(index).operator == "END":
+            resultOb += self.literalTab.getlitAscii(self.getToken(index).location)
+            self.setBytes(index, len(resultOb))
+            self.setObjcode(index, resultOb)
+
+
+        elif self.getToken(index).operator == "BYTE":
+            resultOb += self.getToken(index).operand[0][2:4]
+            self.setBytes(index, 2)
+            self.setObjcode(index, resultOb)
+
+
+        elif self.getToken(index).operator == "WORD":
+            resultOb += "000000"
+            self.setBytes(index, 6)
+            self.setObjcode(index, resultOb)
+
+        # test print
+        print(index + "   " + self.getToken(index).operator + "   " + self.getToken(index).objectCode)
+
+    """
      * index번호에 해당하는 object code를 리턴한다.
      * @param index
      * @return : object code
-    '''
-    public String getObjectCode(int index) {
-        return tokenList.get(index).objectCode;
-    }
+    """
 
-}
+    def getObjectCode(self, index):
+        return self.tokenList[index].objectCode
+
 
 '''
  * 각 라인별로 저장된 코드를 단어 단위로 분할한 후  의미를 해석하는 데에 사용되는 변수와 연산을 정의한다.
  * 의미 해석이 끝나면 pass2에서 object code로 변형되었을 때의 바이트 코드 역시 저장한다.
 '''
-class Token :
+
+
+class Token:
     MAX_OPERAND = 3
-
-
-
-
-
 
     '''
      * 클래스를 초기화 하면서 바로 line의 의미 분석을 수행한다.
@@ -330,7 +314,7 @@ class Token :
         self.location = 0
         self.label = ""
         self.operator = ""
-        self.operand = [] #String type list
+        self.operand = []  # String type list
         self.operand[0] = ""
         self.comment = ""
         self.nixbpe = 0
@@ -339,45 +323,46 @@ class Token :
         self.objectCode = ""
         self.byteSize = 0
 
-
-
-
     # line의 실질적인 분석을 수행하는 함수. Token의 각 변수에 분석한 결과를 저장한다.
     # @param line 문장단위로 저장된 프로그램 코드.
     def parsing(self, line):
         # 매개로 들어온 line을 tab 단위로 잘라 tokens list에 저장
-        tokenizer = ("\t")
+        tokenizer = "\t"
         tokens = tokenizer.tokenize(line)
 
         count = 0
 
-        for token in tokens :
+        for token in tokens:
             count += 1
 
-            if count == 1 :
+            if count == 1:
                 self.label = token
-            elif count == 2 :
+            elif count == 2:
                 self.operator = token
-            elif count == 3 :
+            elif count == 3:
                 opnd = token
-                tokenizer = (",")
+                tokenizer = ","
                 opnds = tokenizer.tokenize(opnd)
                 i = 0
-                for op in opnds :
+                for op in opnds:
                     self.operand[i] = op
                     i += 1
-            elif count == 4 :
+            elif count == 4:
                 self.comment = token
-            else :
-                 print("[TokenTable.py] parsing() error")
+            else:
+                print("[TokenTable.py] parsing() error")
 
-    def setLocation(self, loc) :
+    def setLocation(self, loc):
         self.location = loc
 
-
-    def setNixbpe(self, nixbpe) :
+    def setNixbpe(self, nixbpe):
         self.nixbpe = nixbpe
 
+    def setByteSize(self, num):
+        self.byteSize = num
+
+    def setObjectCode(self, str):
+        self.objectCode = str
 
     '''
      * n,i,x,b,p,e flag를 설정한다.
@@ -388,7 +373,8 @@ class Token :
      * @param flag : 원하는 비트 위치
      * @param value : 집어넣고자 하는 값. 1또는 0으로 선언한다.
     '''
-    def setFlag(self, flag, value) :
+
+    def setFlag(self, flag, value):
         calc = flag * value;
         self.nixbpe += calc;
 
@@ -401,8 +387,7 @@ class Token :
      * @param flags : 값을 확인하고자 하는 비트 위치
      * @return : 비트위치에 들어가 있는 값. 플래그별로 각각 32, 16, 8, 4, 2, 1의 값을 리턴할 것임.
     '''
-    def getFlag(self, flags) :
-        
+
+    def getFlag(self, flags):
+
         return self.nixbpe;
-
-

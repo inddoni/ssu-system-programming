@@ -1,8 +1,8 @@
-import InstTable
-import LiteralTable
-import SymbolTable
-import TokenTable
-import Assembler
+from InstTable import *
+from LiteralTable import *
+from SymbolTable import *
+from TokenTable import TokenTable
+from Assembler import *
 
 
 
@@ -16,10 +16,10 @@ assembler.instTable.setInstruction()
 
 assembler.loadInputFile("/input.txt");
 
-assembler.pass1();
+assembler.pass1()
 
-assembler.printSymbolTable("symtab_20180445.txt");
-assembler.printLiteralTable("literaltab_20180445.txt");
-assembler.pass2();
-assembler.printObjectCode("output_20180445.txt");
+assembler.printSymbolTable("symtab_20180445.txt")
+assembler.printLiteralTable("literaltab_20180445.txt")
+assembler.pass2()
+assembler.printObjectCode("output_20180445.txt")
 
