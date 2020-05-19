@@ -1,31 +1,24 @@
+from nltk.tokenize.regexp import RegexpTokenizer
 
-'''
+"""
  * 사용자가 작성한 프로그램 코드를 단어별로 분할 한 후, 의미를 분석하고, 최종 코드로 변환하는 과정을 총괄하는 클래스이다. <br>
  * pass2에서 object code로 변환하는 과정은 혼자 해결할 수 없고 symbolTable과 instTable의 정보가 필요하므로 이를 링크시킨다.<br>
  * section 마다 인스턴스가 하나씩 할당된다.
  *
-'''
-public class TokenTable {
-    public static final int MAX_OPERAND=3;
-    int locCount = 0; //location counter 전역 변수 선언
+"""
+class TokenTable :
+    MAX_OPERAND=3
+    locCount = 0 #location counter 전역 변수 선언
 
-    ArrayList<String> literCheck;
 
-    # bit 조작의 가독성을 위한 선언
-    public static final int nFlag=32;
-    public static final int iFlag=16;
-    public static final int xFlag=8;
-    public static final int bFlag=4;
-    public static final int pFlag=2;
-    public static final int eFlag=1;
+    # bit 조작의 가독성을 위한 선언 (static)
+    nFlag = 32
+    iFlag = 16
+    xFlag = 8
+    bFlag = 4
+    pFlag = 2
+    eFlag = 1
 
-    # Token을 다룰 때 필요한 테이블들을 링크시킨다.
-    SymbolTable symTab;
-    LiteralTable literalTab;
-    InstTable instTab;
-
-    # 각 line을 의미별로 분할하고 분석하는 공간.
-    ArrayList<Token> tokenList;
 
     '''
      * 초기화하면서 symTable과 literalTable과 instTable을 링크시킨다.
@@ -33,21 +26,27 @@ public class TokenTable {
      * @param literalTab : 해당 section과 연결되어있는 literal table
      * @param instTab : instruction 명세가 정의된 instTable
     '''
-    public TokenTable(SymbolTable symTab, LiteralTable literalTab, InstTable instTab) {
-        this.symTab = symTab;
-        this.literalTab = literalTab;
-        this.instTab = instTab;
-        literCheck = new ArrayList<String>();
-        tokenList = new ArrayList<Token>(); //tokenList 생성
-        locCount = 0;
-    }
+    def __init__(self, symTab, literalTab, instTab):
+        # Token을 다룰 때 필요한 테이블들을 링크시킨다.
+        self.symTab = symTab
+        self.literalTab = literalTab;
+        self.instTab = instTab;
+        self.literCheck = []     # String
+
+        # 각 line을 의미별로 분할하고 분석하는 공간.
+        self.tokenList = []      # tokenList 생성
+
+        # 주소값계산
+        self.locCount = 0
+
 
     '''
      * 일반 문자열을 받아서 Token단위로 분리시켜 tokenList에 추가한다.
      * @param line : 분리되지 않은 일반 문자열
-     '''
-    public void putToken(String line) {
-        Token tok = new Token(line);
+    '''
+    def putToken(line) :
+        tok = Token()
+        tok.parsing(line)
         tok.setLocation(locCount);
         tokenList.add(tok);
         #해당 라인의 토큰파싱이 끝나고 Symbol이 있으면 추가해주기
@@ -313,80 +312,72 @@ public class TokenTable {
  * 각 라인별로 저장된 코드를 단어 단위로 분할한 후  의미를 해석하는 데에 사용되는 변수와 연산을 정의한다.
  * 의미 해석이 끝나면 pass2에서 object code로 변형되었을 때의 바이트 코드 역시 저장한다.
 '''
-class Token{
-    public static final int MAX_OPERAND=3;
+class Token :
+    MAX_OPERAND = 3
 
-    # 의미 분석 단계에서 사용되는 변수들
-    int location;
-    String label;
-    String operator;
-    String[] operand;
-    String comment;
-    char nixbpe; # 16진수 2자리로 커버
 
-    # object code 생성 단계에서 사용되는 변수들
-    String objectCode;
-    int byteSize;
+
+
+
 
     '''
      * 클래스를 초기화 하면서 바로 line의 의미 분석을 수행한다.
      * @param line 문장단위로 저장된 프로그램 코드
     '''
 
-    public Token(String line) {
-        # initialize
-        location = 0;
-        label = "";
-        operator = "";
-        operand = new String[MAX_OPERAND];
-        operand[0] = "";
-        comment = "";
-        nixbpe = 0;
-        parsing(line);
-    }
+    def __init__(self):
+        # 의미 분석 단계에서 사용되는 변수들 initialize
+        self.location = 0
+        self.label = ""
+        self.operator = ""
+        self.operand = [] #String type list
+        self.operand[0] = ""
+        self.comment = ""
+        self.nixbpe = 0
+
+        # object code 생성 단계에서 사용되는 변수들
+        self.objectCode = ""
+        self.byteSize = 0
 
 
-     # line의 실질적인 분석을 수행하는 함수. Token의 각 변수에 분석한 결과를 저장한다.
-     # @param line 문장단위로 저장된 프로그램 코드.
-    public void parsing(String line) {
-        StringTokenizer st = new StringTokenizer(line, "\t");
-        int count = 0;
 
-        while(st.hasMoreTokens()) {
-            count++;
 
-            switch(count) {
-                case 1:
-                    this.label = st.nextToken();
-                    break;
-                case 2:
-                    this.operator = st.nextToken();
-                    break;
-                case 3:
-                    String opnd = st.nextToken();
-                    StringTokenizer st2 = new StringTokenizer(opnd, ",");
-                    int n = st2.countTokens();
-                    for(int i = 0; i < n; i++){
-                        operand[i] = st2.nextToken();
-                    }
-                    break;
-                case 4:
-                    this.comment = st.nextToken();
-                    break;
-                default:
-                    System.out.println("[TokenTable.java] parsing() error");
-                    break;
-            }
-        }
-    }
+    # line의 실질적인 분석을 수행하는 함수. Token의 각 변수에 분석한 결과를 저장한다.
+    # @param line 문장단위로 저장된 프로그램 코드.
+    def parsing(self, line):
+        # 매개로 들어온 line을 tab 단위로 잘라 tokens list에 저장
+        tokenizer = ("\t")
+        tokens = tokenizer.tokenize(line)
 
-    public void setLocation(int loc){
-        this.location = loc;
-    }
+        count = 0
 
-    public void setNixbpe(char nixbpe){
-        this.nixbpe = nixbpe;
-    }
+        for token in tokens :
+            count += 1
+
+            if count == 1 :
+                self.label = token
+            elif count == 2 :
+                self.operator = token
+            elif count == 3 :
+                opnd = token
+                tokenizer = (",")
+                opnds = tokenizer.tokenize(opnd)
+                i = 0
+                for op in opnds :
+                    self.operand[i] = op
+                    i += 1
+            elif count == 4 :
+                self.comment = token
+            else :
+                 print("[TokenTable.py] parsing() error")
+
+    def setLocation(self, loc) :
+        self.location = loc
+
+
+    def setNixbpe(self, nixbpe) :
+        self.nixbpe = nixbpe
+
 
     '''
      * n,i,x,b,p,e flag를 설정한다.
@@ -397,10 +388,9 @@ class Token{
      * @param flag : 원하는 비트 위치
      * @param value : 집어넣고자 하는 값. 1또는 0으로 선언한다.
     '''
-    public void setFlag(int flag, int value) {
-        int calc = flag * value;
-        this.nixbpe += calc;
-    }
+    def setFlag(self, flag, value) :
+        calc = flag * value;
+        self.nixbpe += calc;
 
     '''
      * 원하는 flag들의 값을 얻어올 수 있다. flag의 조합을 통해 동시에 여러개의 플래그를 얻는 것 역시 가능하다
@@ -411,7 +401,8 @@ class Token{
      * @param flags : 값을 확인하고자 하는 비트 위치
      * @return : 비트위치에 들어가 있는 값. 플래그별로 각각 32, 16, 8, 4, 2, 1의 값을 리턴할 것임.
     '''
-    public int getFlag(int flags) {
-        return nixbpe & flags;
-    }
-}
+    def getFlag(self, flags) :
+        
+        return self.nixbpe;
+
+

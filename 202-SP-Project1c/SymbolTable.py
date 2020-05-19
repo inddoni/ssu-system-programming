@@ -3,12 +3,12 @@
  * symbol과 관련된 데이터와 연산을 소유한다.
  * section 별로 하나씩 인스턴스를 할당한다.
 '''
-class SymbolTable :
+class SymbolTable:
 
     # 기타 literal, external 선언 및 처리방법을 구현한다.
 
     # LiteralTable 생성자 - 클래스 초기화
-    def __init__(self) :
+    def __init__(self):
         self.symbolList = []
         self.locationList = []
 
@@ -21,7 +21,7 @@ class SymbolTable :
      * 매칭되는 주소값의 변경은 modifySymbol()을 통해서 이루어져야 한다.
     '''
 
-    def putSymbol(symbol, location) :
+    def putSymbol(symbol, location):
         if search(symbol) == -1 :
             symbolList.append(symbol)
             locationList.append(location)
@@ -32,7 +32,7 @@ class SymbolTable :
      * @param symbol : 변경을 원하는 symbol의 label
      * @param newLocation : 새로 바꾸고자 하는 주소값
     '''
-    def modifySymbol(symbol, newLocation) :
+    def modifySymbol(symbol, newLocation):
         index = symbolList.index(symbol)
         locationList[index] = newLocation
 
@@ -42,9 +42,9 @@ class SymbolTable :
      * @param symbol : 검색을 원하는 symbol의 label
      * @return symbol이 가지고 있는 주소값. 해당 symbol이 없을 경우 -1 리턴
     '''
-    def search(symbol) :
+    def search(symbol):
         address = -1
-        if symbol in symbolList :
+        if symbol in symbolList:
             idx = symbolList.index(symbol)
             address = locationList[idx]
             return address

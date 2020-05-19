@@ -6,7 +6,7 @@ class LiteralTable :
 
     # 기타 literal, external 선언 및 처리방법을 구현한다.
 
-    literalCount = 0; # literal 넣을때마다 count 해줌 (static)
+    literalCount = 0 # literal 넣을때마다 count 해줌 (static)
 
     # LiteralTable 생성자 - 클래스 초기화
     def __init__(self) :

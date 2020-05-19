@@ -1,6 +1,6 @@
 import InstTable
 import LiteralTable
-import SymbolTable
+from SymbolTable import *
 import TokenTable
 
 
@@ -31,11 +31,9 @@ class Assembler :
      * 클래스 초기화. instruction Table을 초기화와 동시에 세팅한다.
      * @param instFile : instruction 명세를 작성한 파일 이름.
     '''
-    def __init__(self, instFile) :
+    def __init__(self) :
         # instruction 명세를 저장한 공간
         self.instTable = InstTable()
-        self.instTable.openFile(instFile) #점검
-        self.instTable.setInstruction() #점검
 
         # 읽어들인 input 파일의 내용을 한 줄 씩 저장하는 공간.
         self.inputTable = InstTable()
@@ -52,6 +50,8 @@ class Assembler :
 
         # Token, 또는 지시어에 따라 만들어진 오브젝트 코드들을 출력 형태로 저장하는 공간.
         self.codeList = []
+
+
 
 
 
@@ -74,19 +74,17 @@ class Assembler :
      *    주의사항 : SymbolTable과 LiteralTable과 TokenTable은 프로그램의 section별로 하나씩 선언되어야 한다.
     '''
     def pass1(self) :
-        SymbolTable[] symbolTables = new SymbolTable[3];
-        LiteralTable[] literalTables = new LiteralTable[3];
-        TokenTable[] tokenTables = new TokenTable[3];
+
         section = -1;
 
-        for line in lineList :
+        for line in self.lineList :
             if line.find('START') or line.find('CSECT') :
                 section += 1;
-                symbolTables[section] = new SymbolTable();
-                literalTables[section] = new LiteralTable();
-                tokenTables[section] = new TokenTable(symbolTables[section], literalTables[section], instTable);
-            }
-            tokenTables[section].putToken(line);
+                self.symtabList[section] = SymbolTable()
+                self.leteraltabList[section] = LiteralTable()
+                self.tokenList[section] = TokenTable(symbolTables[section], literalTables[section], instTable);
+
+            self.tokenList[section].putToken(line);
 
         }
 
@@ -304,18 +302,4 @@ class Assembler :
 
 }
 
-
-'''
- * 어셈블러의 메인 루틴
-'''
-
-Assembler assembler = new Assembler("/inst.txt");
-assembler.loadInputFile("/input.txt");
-
-assembler.pass1();
-
-assembler.printSymbolTable("symtab_20180445.txt");
-assembler.printLiteralTable("literaltab_20180445.txt");
-assembler.pass2();
-assembler.printObjectCode("output_20180445.txt");
 
