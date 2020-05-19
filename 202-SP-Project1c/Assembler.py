@@ -29,17 +29,16 @@ import TokenTable
 class Assembler :
     '''
      * 클래스 초기화. instruction Table을 초기화와 동시에 세팅한다.
-     *
      * @param instFile : instruction 명세를 작성한 파일 이름.
     '''
-    def __init__(instFile) :
+    def __init__(self, instFile) :
         # instruction 명세를 저장한 공간
         self.instTable = InstTable()
-        self.instTable.openFile(instFile)
-        self.instTable.setInstruction()
+        self.instTable.openFile(instFile) #점검
+        self.instTable.setInstruction() #점검
 
         # 읽어들인 input 파일의 내용을 한 줄 씩 저장하는 공간.
-        self.inputTable = null
+        self.inputTable = InstTable()
         self.lineList = []
 
         # 프로그램의 section별로 symbol table을 저장하는 공간
@@ -62,9 +61,8 @@ class Assembler :
      * @param inputFile : input 파일 이름.
     '''
     def loadInputFile(self, inputFile) :
-        self.inputTable = InstTable(inputFile)
         self.inputTable.openFile(inputFile)
-        self.lineList = inputTable.getLines()
+        self.lineList = self.inputTable.getLines()
 
 
 

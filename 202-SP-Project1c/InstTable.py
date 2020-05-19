@@ -18,12 +18,12 @@ class InstTable :
         self.lines = []
         self.readInst = []
         # method
-        self.openFile()
-        self.setInstruction()
-        self.getLines()
-        self.printInstMap()
-        self.searchFormat()
-        self.searchOpcode()
+        # self.openFile()
+        # self.setInstruction()
+        # self.getLines()
+        # self.printInstMap()
+        # self.searchFormat()
+        # self.searchOpcode()
 
 
 
@@ -46,39 +46,39 @@ class InstTable :
 
         for line in lines :
             self.readInsts = Instruction(line)
-            instMap[Instruction[0]] = Instruction
+            self.instMap[Instruction[0]] = Instruction
 
 
     def getLines(self) :
-        return lines
+        return self.lines
 
 
     def printInstMap(self) :
-        for key, value in instMap.items() :
+        for key, value in self.instMap.items() :
             print(key + "\t" + value[2] + "\t" + value[1])
 
 
-    def searchFormat(operName) :
+    def searchFormat(self, operName) :
 
         if operName != "" and operName[0] == '+' :
             return 4;
         else :
-            if instMap.get(operName) :
-                return instMap[operName][1]
+            if self.instMap.get(operName) :
+                return self.instMap[operName][1]
             else :
                 return -1
 
 
-    def searchOpcode(operName) :
+    def searchOpcode(self, operName) :
 
         if operName != "" :
             if operName[0] == '+' :
                 operName = operName[1:]
-                return instMap[operName][2]; #index = 2 면, opcode
+                return self.instMap[operName][2]; #index = 2 면, opcode
 
             else :
-                if instMap.get(operName) :
-                    return instMap.get(operName).opcode;
+                if self.instMap.get(operName) :
+                    return self.instMap.get(operName).opcode;
                 else :
                     return 0;
         else :
@@ -98,12 +98,12 @@ class Instruction :
 
     # 클래스를 선언하면서 일반문자열을 즉시 구조에 맞게 파싱한다.
     # @param line : instruction 명세파일로부터 한줄씩 가져온 문자열
-    def __init__(line) :
+    def __init__(self) :
         self.instruction = ""
         self.format = 0
         self.opcode = 0
         self.numberOfOperand = 0
-        self.parsing(line)
+        # self.parsing(line)
 
 
 
