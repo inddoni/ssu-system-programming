@@ -190,17 +190,16 @@ class TokenTable:
             opcode = self.instTab.searchOpcode(self.getToken(index).operator)
             opcodeStr = "%X" % opcode
             resultOb += opcodeStr
-            i = 0
-            while len(self.getToken(index).operand[i]) > 0:
-                if self.getToken(index).operand[i] == "X":
+
+            for i in self.getToken(index).operand :
+                if i == "X":
                     resultOb += "1"
-                elif self.getToken(index).operand[i] == "A":
+                elif i == "A":
                     resultOb += "0"
-                elif self.getToken(index).operand[i] == "S":
+                elif i == "S":
                     resultOb += "4"
                 else:  # T인 경우
                     resultOb += "5"
-                i += 1
 
             if len(resultOb) < self.getToken(index).byteSize:
                 resultOb += "0"
@@ -289,7 +288,7 @@ class TokenTable:
             self.setObjcode(index, resultOb)
 
         # test print
-        #print(index + "   " + self.getToken(index).operator + "   " + self.getToken(index).objectCode)
+        print('%d\t%s\t%s' % (index, self.getToken(index).operator, self.getToken(index).objectCode))
 
     """
      * index번호에 해당하는 object code를 리턴한다.

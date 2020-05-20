@@ -143,7 +143,8 @@ class Assembler:
 
         for tokT in self.TokenList:
             count = 0
-            self.codeList.append("H%s\t000000%06X" % (tokT.getToken(count).label, tokT.locCount))
+            str = "H%s\t000000%06X" % (tokT.getToken(count).label, tokT.locCount)
+            self.codeList.append(str)
             lineLength = 0  # T line에서 쓸 것
             tempContent = ""  # T line에서 쓸 것
             tempName = ""
@@ -177,15 +178,15 @@ class Assembler:
 
                     # M line prepare
                     exceptStr = tokT.getToken(count).operand[0].split("-")  # befend-buffer 처리
-                    if REFlist.contains(tokT.getToken(count).operand[0]):
+                    if tokT.getToken(count).operand[0] in REFlist:
                         line = "M%06X05+%s" % (tokT.getToken(count).location + 1, tokT.getToken(count).operand[0])
                         Mlist.append(line)
 
-                elif REFlist.contains(exceptStr[0]):
-                    line1 = "M%06X06+%s" % (tokT.getToken(count).location, exceptStr[0])
-                    line2 = "M%06X06-%s" % (tokT.getToken(count).location, exceptStr[1])
-                    Mlist.append(line1)
-                    Mlist.append(line2)
+                    elif exceptStr[0] in REFlist:
+                        line1 = "M%06X06+%s" % (tokT.getToken(count).location, exceptStr[0])
+                        line2 = "M%06X06-%s" % (tokT.getToken(count).location, exceptStr[1])
+                        Mlist.append(line1)
+                        Mlist.append(line2)
 
                     if tokT.getObjectCode(count) == "":
                         temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
@@ -193,39 +194,39 @@ class Assembler:
                         tempContent = ""  # init
 
 
-                elif lineLength < 57:
-                    if tempContent == "":
-                        tempName = "T"
-                        tempName = "%s%06X" % (tempName, tokT.getToken(count).location)
-                        tempContent = tokT.getObjectCode(count)
+                    elif lineLength < 57:
+                        if tempContent == "":
+                            tempName = "T"
+                            tempName = "%s%06X" % (tempName, tokT.getToken(count).location)
+                            tempContent = tokT.getObjectCode(count)
 
 
-                    else:
-                        tempContent += tokT.getObjectCode(count)
-                        if len(tokT.tokenList) == count + 1:
-                            if tempContent != "":
-                                temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
-                                self.codeList.append(temp)
-                                tempContent = ""
-                                lineLength = 0
+                        else:
+                            tempContent += tokT.getObjectCode(count)
+                            if len(tokT.tokenList) == count + 1:
+                                if tempContent != "":
+                                    temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                                    self.codeList.append(temp)
+                                    tempContent = ""
+                                    lineLength = 0
 
-                    lineLength += tokT.getToken(count).byteSize
-
-                else:
-                    temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
-                    self.codeList.append(temp)
-                    lineLength = 0
-                    tempContent = ""
-
-                    # 라인 꽉 차서 못들어 간 것 초기화 후에 다시 넣어주기
-                    if tempContent == "":
-                        tempName = "T"
-                        tempName = "%s%06X" % (tempName, tokT.getToken(count).location)
-                        tempContent = tokT.getObjectCode(count)
+                        lineLength += tokT.getToken(count).byteSize
 
                     else:
-                        tempContent += tokT.getObjectCode(count)
-                    lineLength += tokT.getToken(count).byteSize
+                        temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                        self.codeList.append(temp)
+                        lineLength = 0
+                        tempContent = ""
+
+                        # 라인 꽉 차서 못들어 간 것 초기화 후에 다시 넣어주기
+                        if tempContent == "":
+                            tempName = "T"
+                            tempName = "%s%06X" % (tempName, tokT.getToken(count).location)
+                            tempContent = tokT.getObjectCode(count)
+
+                        else:
+                            tempContent += tokT.getObjectCode(count)
+                        lineLength += tokT.getToken(count).byteSize
 
                 count += 1
 
