@@ -22,5 +22,5 @@ assembler.printSymbolTable("symtab_20180445.txt")
 assembler.printLiteralTable("literaltab_20180445.txt")
 
 assembler.pass2()
-#assembler.printObjectCode("output_20180445.txt")
+assembler.printObjectCode("output_20180445.txt")
 

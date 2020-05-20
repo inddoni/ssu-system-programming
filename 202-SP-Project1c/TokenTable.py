@@ -80,7 +80,7 @@ class TokenTable:
                     tok.setFlag(self.iFlag, 1)
 
                 # x flag 설정
-                if len(tok.operand) > 1 and tok.operand[1].find("X"):
+                if len(tok.operand) > 1 and tok.operand[1].find("X") != -1:
                     tok.setFlag(self.xFlag, 1)
                 else:
                     tok.setFlag(self.xFlag, 0)
@@ -125,6 +125,10 @@ class TokenTable:
                 self.literalTab.setLiteralCount(0)
                 count = 0
                 for litCheck in self.literCheck:
+                    if litCheck[1:2] == 'C' :
+                        len = 3
+                    else :
+                        len = 1
                     self.literalTab.modifyLiteral(litCheck, TokenTable.locCount + (count * len))
                     count += 1
 
@@ -238,15 +242,17 @@ class TokenTable:
             if opcode == 76:  # RSUB 처리
                 resultOb += "000"
 
+            elif disA < 0:  # 음수인 경우
+                str = hex((disA + (1 << 16)) % (1 << 16))
+                str = str[-3:]  # 뒤에서 3글자만 가져오도록 함
+                resultOb += str.upper()
+
             elif len("%X" % disA) < 3:
                 str = "0" * (3 - len("%X" % disA))
                 resultOb += str
                 resultOb += "%X" % disA
 
-            elif disA < 0:  # 음수인 경우
-                str = "%X" % disA
-                str = str[-3:]  # 뒤에서 3글자만 가져오도록 함
-                resultOb += str
+
             else:
                 print("disA error")
 

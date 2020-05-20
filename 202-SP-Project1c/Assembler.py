@@ -150,6 +150,9 @@ class Assembler:
             tempName = ""
             REFlist = []
             Mlist = []
+            check = True
+
+
 
             for t in tokT.tokenList:
                 # D Line
@@ -174,22 +177,26 @@ class Assembler:
 
 
                 # T Line
+
                 elif tokT.getToken(count).operator != "" and tokT.getObjectCode(count) != "" or tempContent != "":
 
                     # M line prepare
-                    exceptStr = tokT.getToken(count).operand[0].split("-")  # befend-buffer 처리
-                    if tokT.getToken(count).operand[0] in REFlist:
-                        line = "M%06X05+%s" % (tokT.getToken(count).location + 1, tokT.getToken(count).operand[0])
-                        Mlist.append(line)
+                    if len(tokT.getToken(count).operand) != 0 :
+                        exceptStr = tokT.getToken(count).operand[0].split('-')  # befend-buffer 처리
+                        if tokT.getToken(count).operand[0] in REFlist:
+                            line = "M%06X05+%s" % (tokT.getToken(count).location + 1, tokT.getToken(count).operand[0])
+                            Mlist.append(line)
 
-                    elif exceptStr[0] in REFlist:
-                        line1 = "M%06X06+%s" % (tokT.getToken(count).location, exceptStr[0])
-                        line2 = "M%06X06-%s" % (tokT.getToken(count).location, exceptStr[1])
-                        Mlist.append(line1)
-                        Mlist.append(line2)
+                        elif exceptStr[0] in REFlist:
+                            line1 = "M%06X06+%s" % (tokT.getToken(count).location, exceptStr[0])
+                            line2 = "M%06X06-%s" % (tokT.getToken(count).location, exceptStr[1])
+                            Mlist.append(line1)
+                            Mlist.append(line2)
+
+
 
                     if tokT.getObjectCode(count) == "":
-                        temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                        temp = "%s%02X%s" % (tempName, len(tempContent) // 2, tempContent)
                         self.codeList.append(temp)
                         tempContent = ""  # init
 
@@ -205,7 +212,7 @@ class Assembler:
                             tempContent += tokT.getObjectCode(count)
                             if len(tokT.tokenList) == count + 1:
                                 if tempContent != "":
-                                    temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                                    temp = "%s%02X%s" % (tempName, len(tempContent) // 2, tempContent)
                                     self.codeList.append(temp)
                                     tempContent = ""
                                     lineLength = 0
@@ -213,7 +220,7 @@ class Assembler:
                         lineLength += tokT.getToken(count).byteSize
 
                     else:
-                        temp = "%s%02X%s" % (tempName, tempContent.length() / 2, tempContent)
+                        temp = "%s%02X%s" % (tempName, len(tempContent) // 2, tempContent)
                         self.codeList.append(temp)
                         lineLength = 0
                         tempContent = ""
