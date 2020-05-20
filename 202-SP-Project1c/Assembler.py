@@ -73,7 +73,7 @@ class Assembler:
         section = -1;
 
         for line in self.lineList:
-            if line.find('START') or line.find('CSECT'):
+            if line.find('START') != -1 or line.find('CSECT') != -1 :
                 section += 1;
                 self.symtabList.append(SymbolTable())
                 self.literaltabList.append(LiteralTable())
@@ -94,10 +94,13 @@ class Assembler:
         for st in self.symtabList:
             count = 0
             for symbol in st.symbolList:
-                file.write(symbol + "\t" + format(st.locationList.get(count), 'X') + "\n")
-                count = + 1
+                if len(symbol) != 0 :
+                    loc = st.locationList[count]
+                    str = "%s\t%X\n" % (symbol, loc)
+                    file.write(str)
+                    count += 1
 
-            file.write("\n")
+        file.write("\n")
 
     '''
      * 작성된 LiteralTable들을 출력형태에 맞게 출력한다.
@@ -111,8 +114,12 @@ class Assembler:
         for lt in self.literaltabList:
             count = 0
             for literal in lt.literalList:
-                file.write(literal[3:-1] + "\t" + format(lt.locationList.get(count), 'X') + "\n")
-                count += 1
+                if len(literal) != 0 :
+                    loc = lt.locationList[count]
+                    literal = literal[3:-1]
+                    str = "%s\t%X\n" % (literal, loc)
+                    file.write(str)
+                    count += 1
 
     '''
      * pass2 과정을 수행한다.

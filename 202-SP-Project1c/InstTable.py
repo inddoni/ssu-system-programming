@@ -65,7 +65,7 @@ class InstTable:
             return 4;
         else :
             if self.instMap.get(operName) :
-                return self.instMap[operName][1]
+                return self.instMap.get(operName).format
             else :
                 return -1
 
@@ -75,15 +75,16 @@ class InstTable:
         if operName != "" :
             if operName[0] == '+' :
                 operName = operName[1:]
-                return self.instMap[operName][2]; #index = 2 면, opcode
+                opcode = self.instMap.get(operName).opcode
+                return opcode
 
             else :
                 if self.instMap.get(operName) :
-                    return self.instMap.get(operName).opcode;
+                    return self.instMap.get(operName).opcode
                 else :
-                    return 0;
+                    return 0
         else :
-            return -1;
+            return -1
 
 
     # get, set, search 등의 함수는 자유 구현

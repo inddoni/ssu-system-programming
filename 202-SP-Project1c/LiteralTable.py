@@ -67,8 +67,10 @@ class LiteralTable:
         idx = self.locationList.index(addr)
         findLit = self.literalList[idx]
         if findLit[1] == 'C':
-            for i in range(0, 3):
-                getAscii += '{:X}'.format(hex(int(findLit[i + 3])))
+            findLit = findLit[3:-1]
+            for i in findLit:
+                str = "%X" % ord(i)
+                getAscii += str
         else:
             findLit = findLit[3:5]
             getAscii += findLit

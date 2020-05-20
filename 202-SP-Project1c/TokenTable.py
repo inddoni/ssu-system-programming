@@ -13,6 +13,7 @@ from Token import *
 
 
 class TokenTable:
+    locCount = 0 #클래스변수선언
     """
      * 초기화하면서 symTable과 literalTable과 instTable을 링크시킨다.
      * @param symTab : 해당 section과 연결되어있는 symbol table
@@ -25,13 +26,13 @@ class TokenTable:
         self.literalTab = literalT
         self.instTab = instT
         self.literCheck = []  # String
-
+        TokenTable.locCount = 0 # init
         # 각 line을 의미별로 분할하고 분석하는 공간.
         self.tokenList = []  # tokenList 생성
 
     """ 전역변수 """
     MAX_OPERAND = 3
-    locCount = 0  # location counter 전역 변수 선언
+
 
     # bit 조작의 가독성을 위한 선언 (static)
     nFlag = 32
@@ -49,7 +50,7 @@ class TokenTable:
     def putToken(self, line):
         tok = Token()
         tok.parsing(line)
-        tok.setLocation(self.locCount)
+        tok.setLocation(TokenTable.locCount)
         self.tokenList.append(tok)
 
         # 해당 라인의 토큰파싱이 끝나고 Symbol이 있으면 추가해주기
@@ -57,7 +58,7 @@ class TokenTable:
             self.symTab.putSymbol(tok.label, tok.location)
 
         # 해당 라인의 토큰파싱이 끝나고 literal이 있으면 추가해주기
-        if tok.operand[0] != "" and tok.operand[0].find("="):
+        if len(tok.operand) > 0 and tok.operand[0] != "" and tok.operand[0].find('=') != -1 :
             self.literalTab.putLiteral(tok.operand[0], tok.location)
             self.literCheck.append(tok.operand[0])
 
@@ -79,7 +80,7 @@ class TokenTable:
                     tok.setFlag(self.iFlag, 1)
 
                 # x flag 설정
-                if tok.operand[1] != "" and tok.operand[1].find("X"):
+                if len(tok.operand) > 1 and tok.operand[1].find("X"):
                     tok.setFlag(self.xFlag, 1)
                 else:
                     tok.setFlag(self.xFlag, 0)
@@ -101,7 +102,7 @@ class TokenTable:
         # 해당 라인의 토큰파싱이 끝나고 operator를 확인해서 locCount 값 계산해주기
         locationlen = self.calcLocation(tok)
         if locationlen > 0:
-            self.locCount += locationlen
+            TokenTable.locCount += locationlen
 
     def calcLocation(self, token):
         len = self.instTab.searchFormat(token.operator)
@@ -124,7 +125,7 @@ class TokenTable:
                 self.literalTab.setLiteralCount(0)
                 count = 0
                 for litCheck in self.literCheck:
-                    self.literalTab.modifyLiteral(litCheck, self.locCount + (count * len))
+                    self.literalTab.modifyLiteral(litCheck, TokenTable.locCount + (count * len))
                     count += 1
 
             elif token.operator == "END":
@@ -140,7 +141,8 @@ class TokenTable:
                     len = 0
 
                 else:
-                    tokenizer = "-"
+
+                    tokenizer = RegexpTokenizer("-", gaps=True)
                     tokens = tokenizer.tokenize(token.operand[0])
 
                     value1 = self.symTab.search(tokens[0])
@@ -186,10 +188,10 @@ class TokenTable:
         if self.instTab.searchFormat(self.getToken(index).operator) == 2:
             self.setBytes(index, 4)
             opcode = self.instTab.searchOpcode(self.getToken(index).operator)
-            opcodeStr = format(opcode, 'X')
+            opcodeStr = "%X" % opcode
             resultOb += opcodeStr
             i = 0
-            while self.getToken(index).operand[i] != "":
+            while len(self.getToken(index).operand[i]) > 0:
                 if self.getToken(index).operand[i] == "X":
                     resultOb += "1"
                 elif self.getToken(index).operand[i] == "A":
@@ -215,7 +217,7 @@ class TokenTable:
                 oprand = oprand[1:]
 
             elif oprand[0] == '#':
-                disA = int(oprand[1:0])
+                disA = int(oprand[1:])
 
             elif oprand[0] == '=':
                 TA = self.literalTab.search(oprand)
@@ -229,21 +231,21 @@ class TokenTable:
 
             # object code 앞부분 처리
             calcObjCode = opcode * 16 + self.getToken(index).nixbpe
-            if len(format(calcObjCode, 'X')) < 3:
+            if len("%X" % calcObjCode) < 3:
                 resultOb += "0"
-            resultOb += format(calcObjCode, 'X')
+            resultOb += "%X" % calcObjCode
 
             # object code 뒷부분 처리
             if opcode == 76:  # RSUB 처리
                 resultOb += "000"
 
-            elif len(format(disA, 'X')) < 3:
-                str = "0" * (3 - len(format(disA, 'X')))
+            elif len("%X" % disA) < 3:
+                str = "0" * (3 - len("%X" % disA))
                 resultOb += str
-                resultOb += format(disA, 'X')
+                resultOb += "%X" % disA
 
             elif disA < 0:  # 음수인 경우
-                str = format(disA, 'X')
+                str = "%X" % disA
                 str = str[-3:]  # 뒤에서 3글자만 가져오도록 함
                 resultOb += str
             else:
@@ -261,7 +263,7 @@ class TokenTable:
             calcObjCode = opcode * 16 + self.getToken(index).nixbpe
             if opcode == 0:  # LDA일 때, 예외처리
                 resultOb += "0"
-            resultOb += format(calcObjCode, 'X')
+            resultOb += "%X" % calcObjCode
 
             # object code 뒷부분 처리
             resultOb += disA
@@ -287,7 +289,7 @@ class TokenTable:
             self.setObjcode(index, resultOb)
 
         # test print
-        print(index + "   " + self.getToken(index).operator + "   " + self.getToken(index).objectCode)
+        #print(index + "   " + self.getToken(index).operator + "   " + self.getToken(index).objectCode)
 
     """
      * index번호에 해당하는 object code를 리턴한다.
