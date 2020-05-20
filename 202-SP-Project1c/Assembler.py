@@ -1,7 +1,7 @@
 from InstTable import *
 from LiteralTable import *
 from SymbolTable import *
-from TokenTable import TokenTable
+from TokenTable import *
 
 '''
  * Assembler :
@@ -75,12 +75,12 @@ class Assembler:
         for line in self.lineList:
             if line.find('START') or line.find('CSECT'):
                 section += 1;
-                self.symtabList[section] = SymbolTable()
-                self.leteraltabList[section] = LiteralTable()
-                self.tokenList[section] = TokenTable(self.symbolTables[section], self.literalTables[section],
-                                                     self.instTable)
+                self.symtabList.append(SymbolTable())
+                self.literaltabList.append(LiteralTable())
+                tokT = TokenTable(self.symtabList[section], self.literaltabList[section], self.instTable)
+                self.TokenList.append(tokT)
 
-            self.tokenList[section].putToken(line)
+            self.TokenList[section].putToken(line)
 
     """
      * 작성된 SymbolTable들을 출력형태에 맞게 출력한다.

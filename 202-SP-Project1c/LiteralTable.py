@@ -1,18 +1,21 @@
+from InstTable import *
+from LiteralTable import *
+from SymbolTable import *
+from TokenTable import *
 """
  * literal과 관련된 데이터와 연산을 소유한다.
  * section 별로 하나씩 인스턴스를 할당한다.
 """
-
-
 class LiteralTable:
-    # 기타 literal, external 선언 및 처리방법을 구현한다.
-
-    literalCount = 0  # literal 넣을때마다 count 해줌 (static)
-
     # LiteralTable 생성자 - 클래스 초기화
     def __init__(self):
         self.literalList = []
         self.locationList = []
+    # 기타 literal, external 선언 및 처리방법을 구현한다.
+
+    literalCount = 0  # literal 넣을때마다 count 해줌 (static)
+
+
 
     """
      * 새로운 Literal을 table에 추가한다.

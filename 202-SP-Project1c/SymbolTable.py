@@ -1,17 +1,22 @@
-'''
+from InstTable import *
+from LiteralTable import *
+from SymbolTable import *
+from TokenTable import *
+"""
  * symbol과 관련된 데이터와 연산을 소유한다.
  * section 별로 하나씩 인스턴스를 할당한다.
-'''
-
-
+"""
 class SymbolTable:
+
 
     # 기타 literal, external 선언 및 처리방법을 구현한다.
 
-    # LiteralTable 생성자 - 클래스 초기화
+    # SymbolTable 생성자 - 클래스 초기화
     def __init__(self):
         self.symbolList = []
         self.locationList = []
+
+
 
     '''
      * 새로운 Symbol을 table에 추가한다.

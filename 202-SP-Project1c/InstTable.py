@@ -1,14 +1,17 @@
 from nltk.tokenize.regexp import RegexpTokenizer
 import os
+from InstTable import *
+from LiteralTable import *
+from SymbolTable import *
+from TokenTable import *
+
+
 
 # 모든 instruction의 정보를 관리하는 클래스. instruction data들을 저장한다
 # 또한 instruction 관련 연산, 예를 들면 목록을 구축하는 함수, 관련 정보를 제공하는 함수 등을 제공 한다.
 class InstTable:
 
-    # inst.data 파일을 불러와 저장하는 공간.
-    # 명령어의 이름을 집어넣으면 해당하는 Instruction의 정보들을 리턴할 수 있다.
-    instMap = {} #HashMap<String, Instruction>
-    lines = [] #ArrayList<String>
+
 
     # 클래스 초기화(생성자). 파싱을 동시에 처리한다.
     # @param instFile : instuction에 대한 명세가 저장된 파일 이름
@@ -16,7 +19,11 @@ class InstTable:
         self.instMap = dict()
         # 파일을 읽어 한 줄씩 저장할 list init
         self.lines = []
-        self.readInst = []
+
+    # inst.data 파일을 불러와 저장하는 공간.
+    # 명령어의 이름을 집어넣으면 해당하는 Instruction의 정보들을 리턴할 수 있다.
+    instMap = {}  # HashMap<String, Instruction>
+    lines = []  # ArrayList<String>
 
 
 
@@ -36,10 +43,11 @@ class InstTable:
 
     def setInstruction(self) :
         #instruction class를 초기화하면서 라인별로 넣어서 parsing
-
         for line in self.lines :
-            self.readInsts = Instruction(line)
-            self.instMap[Instruction[0]] = Instruction
+            readInsts = Instruction() #instruction 인스턴스 생성
+            readInsts.parsing(line)
+            self.instMap[readInsts.instruction] = readInsts
+
 
 
     def getLines(self) :
@@ -88,7 +96,6 @@ class InstTable:
 '''
 class Instruction :
 
-
     # 클래스를 선언하면서 일반문자열을 즉시 구조에 맞게 파싱한다.
     # @param line : instruction 명세파일로부터 한줄씩 가져온 문자열
     def __init__(self) :
@@ -102,13 +109,13 @@ class Instruction :
 
     # 일반 문자열을 파싱하여 instruction 정보를 파악하고 저장한다.
     # @param line : instruction 명세파일로부터 한줄씩 가져온 문자열
-    def parsing(self, line) :
-
+    def parsing(self, line):
+        line = line[:-1] #문장 맨 뒤 '\n' 자르기
         # 매개로 들어온 line을 tab 단위로 잘라 tokens list에 저장
-        tokenizer = "\t"
+        tokenizer = RegexpTokenizer("\t", gaps=True)
         tokens = tokenizer.tokenize(line)
 
-        count = 0
+        count = 1
         for token in tokens :
             if count == 1 :
                 self.instruction = token

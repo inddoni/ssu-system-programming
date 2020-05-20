@@ -1,5 +1,9 @@
 from nltk.tokenize.regexp import RegexpTokenizer
-
+from InstTable import *
+from LiteralTable import *
+from SymbolTable import *
+from TokenTable import *
+from Token import *
 """
  * 사용자가 작성한 프로그램 코드를 단어별로 분할 한 후, 의미를 분석하고, 최종 코드로 변환하는 과정을 총괄하는 클래스이다. <br>
  * pass2에서 object code로 변환하는 과정은 혼자 해결할 수 없고 symbolTable과 instTable의 정보가 필요하므로 이를 링크시킨다.<br>
@@ -9,6 +13,23 @@ from nltk.tokenize.regexp import RegexpTokenizer
 
 
 class TokenTable:
+    """
+     * 초기화하면서 symTable과 literalTable과 instTable을 링크시킨다.
+     * @param symTab : 해당 section과 연결되어있는 symbol table
+     * @param literalTab : 해당 section과 연결되어있는 literal table
+     * @param instTab : instruction 명세가 정의된 instTable
+    """
+    def __init__(self, symT, literalT, instT):
+        # Token을 다룰 때 필요한 테이블들을 링크시킨다.
+        self.symTab = symT
+        self.literalTab = literalT
+        self.instTab = instT
+        self.literCheck = []  # String
+
+        # 각 line을 의미별로 분할하고 분석하는 공간.
+        self.tokenList = []  # tokenList 생성
+
+    """ 전역변수 """
     MAX_OPERAND = 3
     locCount = 0  # location counter 전역 변수 선언
 
@@ -19,23 +40,6 @@ class TokenTable:
     bFlag = 4
     pFlag = 2
     eFlag = 1
-
-    '''
-     * 초기화하면서 symTable과 literalTable과 instTable을 링크시킨다.
-     * @param symTab : 해당 section과 연결되어있는 symbol table
-     * @param literalTab : 해당 section과 연결되어있는 literal table
-     * @param instTab : instruction 명세가 정의된 instTable
-    '''
-
-    def __init__(self, symTab, literalTab, instTab):
-        # Token을 다룰 때 필요한 테이블들을 링크시킨다.
-        self.symTab = symTab
-        self.literalTab = literalTab;
-        self.instTab = instTab;
-        self.literCheck = []  # String
-
-        # 각 line을 의미별로 분할하고 분석하는 공간.
-        self.tokenList = []  # tokenList 생성
 
     '''
      * 일반 문자열을 받아서 Token단위로 분리시켜 tokenList에 추가한다.
@@ -50,7 +54,7 @@ class TokenTable:
 
         # 해당 라인의 토큰파싱이 끝나고 Symbol이 있으면 추가해주기
         if tok.label != "." and tok.label != " " and tok.label != "":
-            self.symTab.putSymbol(tok.label, tok.location);
+            self.symTab.putSymbol(tok.label, tok.location)
 
         # 해당 라인의 토큰파싱이 끝나고 literal이 있으면 추가해주기
         if tok.operand[0] != "" and tok.operand[0].find("="):
@@ -295,99 +299,3 @@ class TokenTable:
         return self.tokenList[index].objectCode
 
 
-'''
- * 각 라인별로 저장된 코드를 단어 단위로 분할한 후  의미를 해석하는 데에 사용되는 변수와 연산을 정의한다.
- * 의미 해석이 끝나면 pass2에서 object code로 변형되었을 때의 바이트 코드 역시 저장한다.
-'''
-
-
-class Token:
-    MAX_OPERAND = 3
-
-    '''
-     * 클래스를 초기화 하면서 바로 line의 의미 분석을 수행한다.
-     * @param line 문장단위로 저장된 프로그램 코드
-    '''
-
-    def __init__(self):
-        # 의미 분석 단계에서 사용되는 변수들 initialize
-        self.location = 0
-        self.label = ""
-        self.operator = ""
-        self.operand = []  # String type list
-        self.operand[0] = ""
-        self.comment = ""
-        self.nixbpe = 0
-
-        # object code 생성 단계에서 사용되는 변수들
-        self.objectCode = ""
-        self.byteSize = 0
-
-    # line의 실질적인 분석을 수행하는 함수. Token의 각 변수에 분석한 결과를 저장한다.
-    # @param line 문장단위로 저장된 프로그램 코드.
-    def parsing(self, line):
-        # 매개로 들어온 line을 tab 단위로 잘라 tokens list에 저장
-        tokenizer = "\t"
-        tokens = tokenizer.tokenize(line)
-
-        count = 0
-
-        for token in tokens:
-            count += 1
-
-            if count == 1:
-                self.label = token
-            elif count == 2:
-                self.operator = token
-            elif count == 3:
-                opnd = token
-                tokenizer = ","
-                opnds = tokenizer.tokenize(opnd)
-                i = 0
-                for op in opnds:
-                    self.operand[i] = op
-                    i += 1
-            elif count == 4:
-                self.comment = token
-            else:
-                print("[TokenTable.py] parsing() error")
-
-    def setLocation(self, loc):
-        self.location = loc
-
-    def setNixbpe(self, nixbpe):
-        self.nixbpe = nixbpe
-
-    def setByteSize(self, num):
-        self.byteSize = num
-
-    def setObjectCode(self, str):
-        self.objectCode = str
-
-    '''
-     * n,i,x,b,p,e flag를 설정한다.
-     *
-     * 사용 예 : setFlag(nFlag, 1);
-     *   또는     setFlag(TokenTable.nFlag, 1);
-     *
-     * @param flag : 원하는 비트 위치
-     * @param value : 집어넣고자 하는 값. 1또는 0으로 선언한다.
-    '''
-
-    def setFlag(self, flag, value):
-        calc = flag * value;
-        self.nixbpe += calc;
-
-    '''
-     * 원하는 flag들의 값을 얻어올 수 있다. flag의 조합을 통해 동시에 여러개의 플래그를 얻는 것 역시 가능하다
-     *
-     * 사용 예 : getFlag(nFlag)
-     *   또는     getFlag(nFlag|iFlag)
-     *
-     * @param flags : 값을 확인하고자 하는 비트 위치
-     * @return : 비트위치에 들어가 있는 값. 플래그별로 각각 32, 16, 8, 4, 2, 1의 값을 리턴할 것임.
-    '''
-
-    def getFlag(self, flags):
-
-        return self.nixbpe;

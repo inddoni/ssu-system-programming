@@ -1,7 +1,7 @@
 from InstTable import *
 from LiteralTable import *
 from SymbolTable import *
-from TokenTable import TokenTable
+from TokenTable import *
 from Assembler import *
 
 
@@ -12,7 +12,6 @@ from Assembler import *
 
 assembler = Assembler()
 assembler.instTable.openFile("/inst.txt")
-assembler.instTable.setInstruction()
 
 assembler.loadInputFile("/input.txt");
 
