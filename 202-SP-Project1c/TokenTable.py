@@ -294,7 +294,7 @@ class TokenTable:
             self.setObjcode(index, resultOb)
 
         # test print
-        print('%d\t%s\t%s' % (index, self.getToken(index).operator, self.getToken(index).objectCode))
+        #print('%d\t%s\t%s' % (index, self.getToken(index).operator, self.getToken(index).objectCode))
 
     """
      * index번호에 해당하는 object code를 리턴한다.

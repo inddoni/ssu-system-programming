@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/src/SP20_simulator/ResourceManager.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/src/SP20_simulator/SicLoader.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/src/SP20_simulator/SicSimulator.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/src/SP20_simulator/SymbolTable.java" charset="x-windows-949" />
+    <file url="file://$PROJECT_DIR$/src/SP20_simulator/VisualSimulator.java" charset="x-windows-949" />
+  </component>
+</project>
