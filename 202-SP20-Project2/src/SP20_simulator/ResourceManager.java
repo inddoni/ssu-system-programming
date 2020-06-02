@@ -39,6 +39,9 @@ public class ResourceManager{
 	SymbolTable symtabList;
 	// 이외에도 필요한 변수 선언해서 사용할 것.
 
+	public ResourceManager(){
+		symtabList = new SymbolTable();
+	}
 	/**
 	 * 메모리, 레지스터등 가상 리소스들을 초기화한다.
 	 */

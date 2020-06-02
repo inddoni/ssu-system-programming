@@ -32,7 +32,7 @@ public class SicLoader {
 	 * @param objectCode 읽어들인 파일
 	 */
 	public void load(File objectCode){
-
+		
 	};
 	
 	
