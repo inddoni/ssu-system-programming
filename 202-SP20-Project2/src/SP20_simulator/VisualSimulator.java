@@ -4,6 +4,7 @@ import com.sun.deploy.panel.ControlPanel;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,21 +20,20 @@ import java.io.IOException;
  * 즉, 버튼 클릭등의 이벤트를 전달하고 그에 따른 결과값을 화면에 업데이트 하는 역할을 수행한다.<br>
  * 실제적인 작업은 SicSimulator에서 수행하도록 구현한다.
  */
-public class VisualSimulator extends JFrame implements ActionListener {
+public class VisualSimulator extends JFrame {
 	ResourceManager resourceManager = new ResourceManager();
 	SicLoader sicLoader = new SicLoader(resourceManager);
 	SicSimulator sicSimulator = new SicSimulator(resourceManager);
 	public JButton fopenBtn = new JButton("open"); //file open button
-	public JTextField fNameInput = new JTextField(15); //file name user input
+	public JTextField fName = new JTextField(15); //file name user input
 	/**
 	 * 프로그램 로드 명령을 전달한다.
 	 */
 	public void load(File program){
 		//...
 
-		System.out.println("hi");
 		sicLoader.load(program);
-		sicSimulator.load(program);
+		//sicSimulator.load(program);
 	};
 
 	/**
@@ -57,6 +57,10 @@ public class VisualSimulator extends JFrame implements ActionListener {
 		
 	};
 
+	public void initalize(){
+
+	}
+
 	public VisualSimulator(){
 		super("Simulator - MadeByInjeong");
 		this.init();
@@ -71,7 +75,7 @@ public class VisualSimulator extends JFrame implements ActionListener {
 		//File Name
 		JPanel panel1 = new JPanel();
 		panel1.add(new JLabel("FileName : "));
-		panel1.add(fNameInput);
+		panel1.add(fName);
 		panel1.add(fopenBtn);
 
 		//Header Record
@@ -342,34 +346,41 @@ public class VisualSimulator extends JFrame implements ActionListener {
 
 	}
 
-	public void start(){
-		fopenBtn.addActionListener(this);
-		//jfc.setFileFilter(new FileNameExtensionFilter("txt", "txt"));
-		// 파일 필터
-		//jfc.setMultiSelectionEnabled(false);//다중 선택 불가
+
+	public void start(){ //event 처리
+		fopenBtn.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JFileChooser chooser = new JFileChooser();
+				chooser.setFileFilter(new FileNameExtensionFilter("txt", "txt"));
+				chooser.setMultiSelectionEnabled(false); //파일 다중 선택 불가
+				int ret = chooser.showOpenDialog(null);
+				if(ret == JFileChooser.APPROVE_OPTION){
+					try{
+						String fileName = chooser.getSelectedFile().getName();
+						fName.setText(fileName);
+						//System.out.println("load : " + chooser.getSelectedFile());
+						initalize();
+						load(chooser.getSelectedFile());
+						update();
+					} catch(Exception ex){
+						ex.printStackTrace();
+					}
+				}
+			}
+
+		});
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-		if(arg0.getSource() == fopenBtn){
-			String fileName = fNameInput.getText() + ".txt";
-			System.out.println(fileName);
-			String path = new File("").getAbsolutePath();
-			path = path.concat(fileName);
-
-			//file 객체 생성
-			File objFile = new File(path);
-			load(objFile);
-		}
-	}
 
 	public static void main(String[] args) {
-
-		VisualSimulator simulator = new VisualSimulator();
 		ResourceManager resourceManager = new ResourceManager();
 		SicLoader loader = new SicLoader(resourceManager);
+		InstTable instTable = new InstTable("/inst.txt");
+		VisualSimulator simulator = new VisualSimulator();
 
 	}
+
 
 
 }

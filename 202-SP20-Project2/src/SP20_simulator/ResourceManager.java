@@ -35,18 +35,25 @@ public class ResourceManager{
 	char[] memory = new char[65536]; // String으로 수정해서 사용하여도 무방함.
 	int[] register = new int[10];
 	double register_F;
-	
+	ArrayList<String> pName = new ArrayList<String>();
+	ArrayList<Integer> pLength = new ArrayList<Integer>();
+	ArrayList<Integer> pStartAddr = new ArrayList<Integer>();
+
+
 	SymbolTable symtabList;
 	// 이외에도 필요한 변수 선언해서 사용할 것.
 
 	public ResourceManager(){
 		symtabList = new SymbolTable();
+		initializeResource();
 	}
 	/**
 	 * 메모리, 레지스터등 가상 리소스들을 초기화한다.
 	 */
 	public void initializeResource(){
-		
+		//init start adderss in memory
+		//init 10 register
+
 	}
 	
 	/**
@@ -143,5 +150,15 @@ public class ResourceManager{
 	 */
 	public int byteToInt(byte[] data){
 		return 0;
+	}
+
+	public void setProgramName(String s, int cursection){
+		pName.add(cursection, s);
+	}
+	public void setpStartAddr(int i, int cursection){
+		pStartAddr.add(cursection, i);
+	}
+	public void setProgranLength(int i, int cursection){
+		pLength.add(cursection, i);
 	}
 }
