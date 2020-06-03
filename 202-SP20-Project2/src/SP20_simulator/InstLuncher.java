@@ -11,4 +11,7 @@ public class InstLuncher {
 
     // instruction 별로 동작을 수행하는 메소드를 정의
     // ex) public void add(){...}
+    public void LDA(Instruction instruction){
+
+    }
 }

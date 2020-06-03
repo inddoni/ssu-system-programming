@@ -374,6 +374,7 @@ public class VisualSimulator extends JFrame {
 
 
 	public static void main(String[] args) {
+
 		ResourceManager resourceManager = new ResourceManager();
 		SicLoader loader = new SicLoader(resourceManager);
 		InstTable instTable = new InstTable("/inst.txt");

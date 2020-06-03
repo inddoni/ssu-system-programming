@@ -22,6 +22,8 @@ public class InstTable {
      */
     public InstTable(String instFile) {
         instMap = new HashMap<String, Instruction>();
+        openFile(instFile);
+        setInstruction();
     }
 
     /**
@@ -106,6 +108,14 @@ class Instruction {
     int opcode;
     int numberOfOperand;
 
+    /* bit 조작의 가독성을 위한 선언 */
+    public static final int nFlag=32;
+    public static final int iFlag=16;
+    public static final int xFlag=8;
+    public static final int bFlag=4;
+    public static final int pFlag=2;
+    public static final int eFlag=1;
+
     /**
      * 클래스를 선언하면서 일반문자열을 즉시 구조에 맞게 파싱한다.
      * @param line : instruction 명세파일로부터 한줄씩 가져온 문자열
@@ -150,6 +160,8 @@ class Instruction {
         }
     }
 
-
+    public int getFlag(){
+        return 0;
+    }
 
 }

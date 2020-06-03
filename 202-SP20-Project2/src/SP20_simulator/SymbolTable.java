@@ -8,12 +8,14 @@ import java.util.ArrayList;
 public class SymbolTable {
 	ArrayList<String> symbolList;
 	ArrayList<Integer> addressList;
+	ArrayList<Integer> cSection;
 	// 기타 literal, external 선언 및 처리방법을 구현한다.
 
 	// SimbolTable 생성자 - 클래스 초기화
 	public SymbolTable(){
 		symbolList = new ArrayList<String>();
 		addressList = new ArrayList<Integer>();
+		cSection = new ArrayList<Integer>();
 	}
 
 	/**
@@ -24,10 +26,11 @@ public class SymbolTable {
 	 * 주의 : 만약 중복된 symbol이 putSymbol을 통해서 입력된다면 이는 프로그램 코드에 문제가 있음을 나타낸다. 
 	 * 매칭되는 주소값의 변경은 modifySymbol()을 통해서 이루어져야 한다.
 	 */
-	public void putSymbol(String symbol, int address) {
+	public void putSymbol(String symbol, int address, int section) {
 		if(search(symbol) == -1){
 			symbolList.add(symbol);
 			addressList.add(address);
+			cSection.add(section);
 		}
 	}
 	

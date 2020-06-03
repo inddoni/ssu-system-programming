@@ -32,19 +32,24 @@ public class ResourceManager{
 	 * 이것도 복잡하면 알아서 구현해서 사용해도 괜찮습니다.
 	 */
 	HashMap<String,Object> deviceManager = new HashMap<String,Object>();
-	char[] memory = new char[65536]; // String으로 수정해서 사용하여도 무방함.
+	String[] memory = new String[65536]; // String으로 수정해서 사용하여도 무방함.
 	int[] register = new int[10];
 	double register_F;
-	ArrayList<String> pName = new ArrayList<String>();
-	ArrayList<Integer> pLength = new ArrayList<Integer>();
-	ArrayList<Integer> pStartAddr = new ArrayList<Integer>();
 
-
+	ArrayList<String> pSectionName; //각 section의 이름
+	ArrayList<Integer> pSectionLength; //각 section의 길
+	ArrayList<Integer> pSectionAddr;//각 section의 시작 주소
+	static int memoryLoc = 0; //memory의 index
+	int totalProgramAddr = 0; //전체 프로그램의 시작 주소
 	SymbolTable symtabList;
 	// 이외에도 필요한 변수 선언해서 사용할 것.
 
 	public ResourceManager(){
+		pSectionName = new ArrayList<String>();
+		pSectionLength = new ArrayList<Integer>();
+		pSectionAddr = new ArrayList<Integer>();
 		symtabList = new SymbolTable();
+
 		initializeResource();
 	}
 	/**
@@ -52,7 +57,14 @@ public class ResourceManager{
 	 */
 	public void initializeResource(){
 		//init start adderss in memory
+		totalProgramAddr = 0;
+
 		//init 10 register
+		for(int i = 0; i < register.length; i++){
+			register[i] = 0;
+		}
+		register_F = 0.0;
+
 
 	}
 	
@@ -100,9 +112,10 @@ public class ResourceManager{
 	 * @param num 데이터 개수
 	 * @return 가져오는 데이터
 	 */
-	public char[] getMemory(int location, int num){
-		return null;
-		
+	public String getMemory(int location, int num){
+		String getM = memory[location];
+		getM = getM.substring(num);
+		return getM;
 	}
 
 	/**
@@ -111,8 +124,23 @@ public class ResourceManager{
 	 * @param data 저장하려는 데이터
 	 * @param num 저장하는 데이터의 개수
 	 */
-	public void setMemory(int locate, char[] data, int num){
+	public void setMemory(int locate, String data, int num){
+		String temp = memory[locate];
+		//memory[locate]의 index=num부터 data 길이만큼을 temp에 replace
+		if(num != 0){
+			String s1 = memory[locate].substring(0,num);
+			String s2 = memory[locate].substring(num, num+data.length());
+		}
 
+	}
+
+	public void setMemory(String data){
+		memory[memoryLoc] = data;
+		setMemoryLoc(1); //값 넣어줬으면 index 하나 증가
+	}
+
+	public void setMemoryLoc(int memoryLoc) {
+		this.memoryLoc += memoryLoc;
 	}
 
 	/**
@@ -152,13 +180,30 @@ public class ResourceManager{
 		return 0;
 	}
 
-	public void setProgramName(String s, int cursection){
-		pName.add(cursection, s);
+	public void setProgramName(String s){
+		pSectionName.add(s);
 	}
-	public void setpStartAddr(int i, int cursection){
-		pStartAddr.add(cursection, i);
+
+	public void setpStartAddr(int i){
+		if(pSectionAddr.size() > 0){
+			int addr = i + pSectionAddr.get(pSectionAddr.size()-1) + pSectionLength.get(pSectionAddr.size()-1);
+			pSectionAddr.add(addr);
+		}
+		else {
+			pSectionAddr.add(i);
+		}
+
+		totalProgramAddr = getSectionAddr(pSectionAddr.size()-1);
 	}
-	public void setProgranLength(int i, int cursection){
-		pLength.add(cursection, i);
+
+	public int getSectionAddr(int index){
+		return pSectionAddr.get(index);
+	}
+
+	public void setProgramLength(int i){
+		pSectionLength.add(i);
+	}
+	public int getProgramAddr(int index){
+		return pSectionLength.get(index);
 	}
 }
