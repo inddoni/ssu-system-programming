@@ -81,64 +81,33 @@ public class SicLoader {
 	}
 
 	public void loadPass2(){
-		System.out.println("welcome to pass 2 load");
+
 		int sectionCount = -1;
-		String remain = "";
+		int memoryLen = 0;
+		int sectionMemLen = 0;
 		for(String[] sec : sectionLine) { //section 만큼 반복 (총 3번)
 			sectionCount++;
+			sectionMemLen = memoryLen;
 			for (String line : sec) {
 				if (line != null) {
 					switch (line.charAt(0)) {
 						case 'T':
 							int startIdx = 9;
-							int linelen = (Integer.parseInt(line.substring(7,9), 16))*2;
-							int cnt = 0;
-							int store = 0;
-							//변수 보관 중인 값이 있는지 확인
-							if(remain.length() > 0){
-								int prelen = 8-remain.length(); //line 시작에서 이 만큼은 미리 뺄 것이다.
-								String temp = remain + line.substring(startIdx, startIdx+prelen);
-								rMgr.setMemory(temp);
-								startIdx += prelen;
-								cnt = (linelen-prelen) / 8;
-								store = (linelen-prelen) % 8;
-								remain = "";
-							}
-							else {
-								cnt = linelen / 8;
-								store = linelen % 8;
-							}
-
-							for(int i = 0; i < cnt; i++){
-								rMgr.setMemory(line.substring(startIdx, startIdx+8));
-								startIdx += 8;
-							}
-							if(store > 0){
-								remain = line.substring(startIdx,startIdx+store);
+							int linelen = Integer.parseInt(line.substring(7,9), 16);
+							memoryLen += linelen;
+							for(int i = 0; i < linelen; i++){
+								rMgr.setMemory(line.substring(startIdx, startIdx+2));
+								startIdx += 2;
 							}
 							break;
 						case 'M':
-							//T 에서 처리 못한 나머지 코드 메모리에 추가
-							if(remain.length() > 0 && sectionCount == 2){
-								rMgr.setMemory(remain);
-								remain = "";
-							}
-							//substring : memory address, modify length, sign, symbolname
-							int addr = Integer.parseInt(line.substring(1,7));
+							int addr = sectionMemLen + Integer.parseInt(line.substring(1,7), 16);
 							int mLen = Integer.parseInt(line.substring(7,9));
 							char sign = line.charAt(9);
 							String sym = line.substring(10);
-
-							//memory modify
-							int mLoc = addr / 4;
-							int mSubLoc = (addr % 4) * 2;
-							if(mLen == 5)
-								mSubLoc += 1;
-							String s = rMgr.getMemory(mLoc, mSubLoc);
-							int result = Integer.parseInt(s.substring(0,mLen));
-							result += rMgr.symtabList.search(sym);
-							String re = String.format("%05d", result);
-							rMgr.setMemory(mLoc, re, mSubLoc);
+							sym = String.format("%05x", rMgr.symtabList.search(sym));
+							sym = Character.toString(sign) + sym;
+							rMgr.setMemory(addr,sym,mLen);
 							break;
 						case 'E':
 							//프로그램 처음위치로 이동해서 실행
@@ -149,9 +118,6 @@ public class SicLoader {
 				}
 			}
 		}
-
-
-
 	}
 	/**
 	 * object code를 읽어서 load과정을 수행한다. load한 데이터는 resourceManager가 관리하는 메모리에 올라가도록 한다.

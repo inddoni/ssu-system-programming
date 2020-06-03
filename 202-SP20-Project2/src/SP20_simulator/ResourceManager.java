@@ -35,7 +35,7 @@ public class ResourceManager{
 	String[] memory = new String[65536]; // String으로 수정해서 사용하여도 무방함.
 	int[] register = new int[10];
 	double register_F;
-
+	int endRecord = 0;
 	ArrayList<String> pSectionName; //각 section의 이름
 	ArrayList<Integer> pSectionLength; //각 section의 길
 	ArrayList<Integer> pSectionAddr;//각 section의 시작 주소
@@ -125,12 +125,29 @@ public class ResourceManager{
 	 * @param num 저장하는 데이터의 개수
 	 */
 	public void setMemory(int locate, String data, int num){
-		String temp = memory[locate];
-		//memory[locate]의 index=num부터 data 길이만큼을 temp에 replace
-		if(num != 0){
-			String s1 = memory[locate].substring(0,num);
-			String s2 = memory[locate].substring(num, num+data.length());
+		char sign = data.charAt(0);
+		data = data.substring(1);
+
+		String temp = "";
+		for(int i = 0; i < 3; i++)
+			temp += memory[locate+i];
+
+		if (sign == '+'){
+			if(num == 5)
+				temp = temp.substring(0,1) + data;
+			else
+				temp = "0"+data;
 		}
+		else{
+			int value1 = Integer.parseInt(temp, 16);
+			int value2 = Integer.parseInt(data, 16);
+			int result = value1 - value2;
+			temp = String.format("%06x", result);
+		}
+
+		//set replace memory
+		for(int i = 0; i < 3; i++)
+			memory[locate+i] = temp.substring(i*2,(i*2)+2);
 
 	}
 
