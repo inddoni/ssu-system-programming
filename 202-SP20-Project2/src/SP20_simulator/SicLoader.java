@@ -93,15 +93,17 @@ public class SicLoader {
 					switch (line.charAt(0)) {
 						case 'T':
 							int startIdx = 9;
+							int startAddr = Integer.parseInt(line.substring(1,7), 16)+rMgr.getSectionAddr(sectionCount);
 							int linelen = Integer.parseInt(line.substring(7,9), 16);
 							memoryLen += linelen;
 							for(int i = 0; i < linelen; i++){
-								rMgr.setMemory(line.substring(startIdx, startIdx+2));
+								rMgr.setMemory(startAddr, line.substring(startIdx, startIdx+2));
 								startIdx += 2;
+								startAddr += 1;
 							}
 							break;
 						case 'M':
-							int addr = sectionMemLen + Integer.parseInt(line.substring(1,7), 16);
+							int addr = rMgr.getSectionAddr(sectionCount) + Integer.parseInt(line.substring(1,7), 16);
 							int mLen = Integer.parseInt(line.substring(7,9));
 							char sign = line.charAt(9);
 							String sym = line.substring(10);
@@ -110,6 +112,7 @@ public class SicLoader {
 							rMgr.setMemory(addr,sym,mLen);
 							break;
 						case 'E':
+							rMgr.setMemoryLoc(rMgr.getSectionAddr(sectionCount)+rMgr.getProgramLength(sectionCount));
 							//프로그램 처음위치로 이동해서 실행
 							break;
 						default:

@@ -1,5 +1,6 @@
 package SP20_simulator;
 
+import javax.swing.*;
 import java.io.File;
 
 /**
@@ -17,10 +18,11 @@ import java.io.File;
  */
 public class SicSimulator {
 	ResourceManager rMgr;
-
-	public SicSimulator(ResourceManager resourceManager) {
+    VisualSimulator vSim;
+	public SicSimulator(ResourceManager resourceManager, VisualSimulator visualSimulator) {
 		// 필요하다면 초기화 과정 추가
 		this.rMgr = resourceManager;
+		this.vSim = visualSimulator;
 	}
 
 	/**
@@ -29,23 +31,30 @@ public class SicSimulator {
 	 */
 	public void load(File program) {
 		/* 메모리 초기화, 레지스터 초기화 등*/
+		//레지스터 초기화
+		rMgr.initializeResource();
 	}
 
 	/**
 	 * 1개의 instruction이 수행된 모습을 보인다. 
 	 */
-	public void oneStep() {
+	public void oneStep(String inst) {
+
+        vSim.setlogList(inst);
 	}
-	
+
+
 	/**
 	 * 남은 모든 instruction이 수행된 모습을 보인다.
 	 */
 	public void allStep() {
+
 	}
 	
 	/**
 	 * 각 단계를 수행할 때 마다 관련된 기록을 남기도록 한다.
 	 */
 	public void addLog(String log) {
+
 	}	
 }

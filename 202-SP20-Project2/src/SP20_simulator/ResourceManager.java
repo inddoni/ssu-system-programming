@@ -2,6 +2,7 @@ package SP20_simulator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -35,12 +36,13 @@ public class ResourceManager{
 	String[] memory = new String[65536]; // String으로 수정해서 사용하여도 무방함.
 	int[] register = new int[10];
 	double register_F;
-	int endRecord = 0;
+
+	static int endRecord = 0;
 	ArrayList<String> pSectionName; //각 section의 이름
 	ArrayList<Integer> pSectionLength; //각 section의 길
 	ArrayList<Integer> pSectionAddr;//각 section의 시작 주소
 	static int memoryLoc = 0; //memory의 index
-	int totalProgramAddr = 0; //전체 프로그램의 시작 주소
+	static int totalProgramAddr = 0; //전체 프로그램의 시작 주소
 	SymbolTable symtabList;
 	// 이외에도 필요한 변수 선언해서 사용할 것.
 
@@ -49,22 +51,20 @@ public class ResourceManager{
 		pSectionLength = new ArrayList<Integer>();
 		pSectionAddr = new ArrayList<Integer>();
 		symtabList = new SymbolTable();
-
-		initializeResource();
 	}
+
 	/**
 	 * 메모리, 레지스터등 가상 리소스들을 초기화한다.
 	 */
 	public void initializeResource(){
 		//init start adderss in memory
 		totalProgramAddr = 0;
-
 		//init 10 register
 		for(int i = 0; i < register.length; i++){
 			register[i] = 0;
 		}
 		register_F = 0.0;
-
+		//Arrays.fill(memory,"");
 
 	}
 	
@@ -113,8 +113,10 @@ public class ResourceManager{
 	 * @return 가져오는 데이터
 	 */
 	public String getMemory(int location, int num){
-		String getM = memory[location];
-		getM = getM.substring(num);
+		String getM = "";
+		for(int i = 0; i < num; i++){
+			getM += memory[location+i];
+		}
 		return getM;
 	}
 
@@ -151,13 +153,13 @@ public class ResourceManager{
 
 	}
 
-	public void setMemory(String data){
-		memory[memoryLoc] = data;
-		setMemoryLoc(1); //값 넣어줬으면 index 하나 증가
+	public void setMemory(int locate, String data){
+		memory[locate] = data;
+
 	}
 
 	public void setMemoryLoc(int memoryLoc) {
-		this.memoryLoc += memoryLoc;
+		this.memoryLoc = memoryLoc;
 	}
 
 	/**
@@ -166,8 +168,7 @@ public class ResourceManager{
 	 * @return 레지스터가 소지한 값
 	 */
 	public int getRegister(int regNum){
-		return 0;
-		
+		return register[regNum];
 	}
 
 	/**
@@ -176,7 +177,7 @@ public class ResourceManager{
 	 * @param value 레지스터에 집어넣는 값
 	 */
 	public void setRegister(int regNum, int value){
-	
+		register[regNum] = value;
 	}
 
 	/**
@@ -210,7 +211,7 @@ public class ResourceManager{
 			pSectionAddr.add(i);
 		}
 
-		totalProgramAddr = getSectionAddr(pSectionAddr.size()-1);
+		totalProgramAddr = getSectionAddr(pSectionAddr.size()-1) + getProgramLength(pSectionAddr.size()-1);
 	}
 
 	public int getSectionAddr(int index){
@@ -220,7 +221,7 @@ public class ResourceManager{
 	public void setProgramLength(int i){
 		pSectionLength.add(i);
 	}
-	public int getProgramAddr(int index){
+	public int getProgramLength(int index){
 		return pSectionLength.get(index);
 	}
 }
