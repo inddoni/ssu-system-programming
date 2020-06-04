@@ -56,13 +56,13 @@ public class SicSimulator {
 		else if(name.equals("LDA"))
 			vSim.instLuncher.LDA(instruction);
 		else if(name.equals("COMP"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.COMP(instruction);
 		else if(name.equals("JEQ"))
 			vSim.instLuncher.JEQ(instruction);
 		else if(name.equals("J"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.J(instruction);
 		else if(name.equals("STA"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.STA(instruction);
 		else if(name.equals("CLEAR"))
 			vSim.instLuncher.CLEAR(instruction);
 		else if(name.equals("LDT"))
@@ -76,15 +76,15 @@ public class SicSimulator {
 		else if(name.equals("STCH"))
 			vSim.instLuncher.STCH(instruction);
 		else if(name.equals("TIXR"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.TIXR(instruction);
 		else if(name.equals("JLT"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.JLT(instruction);
 		else if(name.equals("STX"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.STX(instruction);
 		else if(name.equals("RSUB"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.RSUB(instruction);
 		else if(name.equals("LDCH"))
-			vSim.instLuncher.STL(instruction);
+			vSim.instLuncher.LDCH(instruction);
 		else
 			System.out.println("undefine instruction");
 
