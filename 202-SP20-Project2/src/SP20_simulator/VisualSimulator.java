@@ -86,14 +86,14 @@ public class VisualSimulator extends JFrame {
 			nowStep = 0;
 		}
 		if(nowStep < instLuncher.instList.size()){
-			String inst = instLuncher.getOne(nowStep);
-			nowStep++;
-			ta.append(inst + "\n");
-			ta.setCaretPosition(ta.getDocument().getLength());
+			String inst = instLuncher.getOne(resourceManager.getRegister(8));
+			this.setinstList(inst);
 
 			//insturction 수행 요청 => sic Simulator
 			sicSimulator.oneStep(inst);
+			update();
 		}
+
 
 	};
 
@@ -114,8 +114,7 @@ public class VisualSimulator extends JFrame {
 			ArrayList<String> getAllinst = instLuncher.getAll();
 			for(int i = nowStep; i < instLuncher.instList.size(); i++){
 				String s = instLuncher.getOne(i);
-				ta.append(s + "\n");
-				ta.setCaretPosition(ta.getDocument().getLength());
+				setinstList(s);
 			}
 			nowStep = instLuncher.instList.size();
 		}
@@ -126,7 +125,7 @@ public class VisualSimulator extends JFrame {
 	 * 화면을 최신값으로 갱신하는 역할을 수행한다.
 	 */
 	public void update(){
-		setinstList();
+//		setinstList();
 		setHeader();
 		setEnd();
 		setAreg();
@@ -134,7 +133,6 @@ public class VisualSimulator extends JFrame {
 		setLreg();
 		setBreg();
 		setSreg();
-		setTreg();
 		setTreg();
 		setFreg();
 		setPCreg();
@@ -199,69 +197,19 @@ public class VisualSimulator extends JFrame {
 	public void setTargetAddr(int addr){
 		pn9Text.setText(Integer.toString(addr)); //target address
 	}
+	public void setinstList(){
+		ta.append(resourceManager.getMemory(0,3) + "\n");
+		ta.setCaretPosition(ta.getDocument().getLength());
+	}
 	public void setinstList(String inst){
-		//ta.append(inst + "\n");
-		//ta.setCaretPosition(ta.getDocument().getLength());
+		ta.append(inst.toUpperCase() + "\n");
+		ta.setCaretPosition(ta.getDocument().getLength());
 	}
 	public void setlogList(String log){
 		ta2.append(log + "\n");
-		ta2.setCaretPosition(ta.getDocument().getLength());
-	}
-	public void setDevice(String name){
-		pnDivText.setText(name);
-	}
-	public void setHeader(String n, int addr, int len){
-		pn2Text.setText(n); //program name
-		pn3Text.setText(Integer.toString(addr)); //GUI program Start Address link @pn3Text
-		pn4Text.setText(Integer.toString(len)); //GUI program length link @pn4Text
-	}
-	public void setEnd(int endrec, int mstart){
-		pn7Text.setText(Integer.toString(endrec)); //end record
-		pn8Text.setText(Integer.toString(mstart)); //memory start address
-	}
-	public void setAreg(int num){
-		pnAText1.setText(Integer.toString(num));
-		pnAText2.setText(String.format("%X", num));
-	}
-	public void setXreg(int num){
-		pnXText1.setText(Integer.toString(num));
-		pnXText2.setText(String.format("%X", num));
-	}
-	public void setLreg(int num){
-		pnLText1.setText(Integer.toString(num));
-		pnLText2.setText(String.format("%X", num));
-	}
-	public void setBreg(int num){
-		pnBText1.setText(Integer.toString(num));
-		pnBText2.setText(String.format("%X", num));
-	}
-	public void setSreg(int num){
-		pnSText1.setText(Integer.toString(num));
-		pnSText2.setText(String.format("%X", num));
-	}
-	public void setTreg(int num){
-		pnTText1.setText(Integer.toString(num));
-		pnTText2.setText(String.format("%X", num));
-	}
-	public void setFreg(int num){
-
-		pnFText1.setText(Integer.toString(num));
-
-	}
-	public void setPCreg(int num){
-		pnPCText1.setText(Integer.toString(num));
-		pnPCText2.setText(String.format("%X", num));
-	}
-	public void setSWreg(int num){
-		pnSWText1.setText(Integer.toString(num));
+		ta2.setCaretPosition(ta2.getDocument().getLength());
 	}
 
-
-
-	public void setinstList(){
-		//ta.append(resourceManager.getMemory(0,3) + "\n");
-		//ta.setCaretPosition(ta.getDocument().getLength());
-	}
 
 	public void setHeader(){
 		pn2Text.setText(resourceManager.pSectionName.get(0)); //program name
@@ -566,8 +514,14 @@ public class VisualSimulator extends JFrame {
 		panelLglb.add(new JLabel("Log(about insturction execute) : "));
 		panelLgta.setLayout(new BoxLayout(panelLgta, BoxLayout.X_AXIS));
 		ta2 = new JTextArea(8, 40);
-		ta2.setEnabled(false);
+		JScrollPane scrollPane2 = new JScrollPane(ta2);
+		scrollPane2.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		scrollPane2.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelLgta.add(new JScrollPane(ta2));
+		panelLgta.add(scrollPane2);
+		ta2.setEnabled(false);
+
+
 		panelLog.setLayout(new BoxLayout(panelLog, BoxLayout.Y_AXIS));
 		panelLog.add(panelLglb);
 		panelLog.add(panelLgta);

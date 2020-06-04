@@ -1,6 +1,9 @@
 package SP20_simulator;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -82,7 +85,19 @@ public class ResourceManager{
 	 * @param devName 확인하고자 하는 디바이스의 번호,또는 이름
 	 */
 	public void testDevice(String devName) {
-		
+		try{
+			File file = new File(devName+".txt");
+			FileReader fos = new FileReader(file);
+			deviceManager.put(devName,fos);
+			setRegister(9, 1); //정상 flag 셋팅
+		} catch(FileNotFoundException e){
+			setRegister(9, 0); //비정상 오류 flag
+			e.printStackTrace();
+		} catch (Exception e){
+			setRegister(9, 0); //비정상 오류 flag
+			e.printStackTrace();
+		}
+
 	}
 
 	/**
@@ -92,8 +107,16 @@ public class ResourceManager{
 	 * @return 가져온 데이터
 	 */
 	public char[] readDevice(String devName, int num){
-		return null;
-		
+		char[] data = new char[50];
+		try{
+			FileReader rName = (FileReader) deviceManager.get(devName);
+			for(int i = 0; i < num; i++){
+				data[i] = (char)(rName.read()+'0');
+			}
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+		return data;
 	}
 
 	/**
@@ -153,6 +176,23 @@ public class ResourceManager{
 
 	}
 
+	/** ==> 계산할때 쓸 메모리 저장 함수
+	 * 메모리의 특정 위치에 원하는 개수만큼의 데이터를 저장한다.
+	 * @param locate 접근 위치 인덱스
+	 * @param data 저장하려는 데이터
+	 * @param num 저장하는 데이터의 개수
+	 */
+	public void setMemoryCal(int locate, String data, int num){
+
+		int value = Integer.parseInt(data);//새로 저장할 값은 10진수
+		String store = String.format("%06d", value);
+
+		//set replace memory
+		for(int i = 0; i < 3; i++)
+			memory[locate+i] = store.substring(i*2,(i*2)+2);
+
+	}
+
 	public void setMemory(int locate, String data){
 		memory[locate] = data;
 
@@ -177,7 +217,10 @@ public class ResourceManager{
 	 * @param value 레지스터에 집어넣는 값
 	 */
 	public void setRegister(int regNum, int value){
-		register[regNum] = value;
+//		if(regNum == 8) //PCregister => 누적값
+//			register[regNum] += value;
+//		else
+			register[regNum] = value;
 	}
 
 	/**

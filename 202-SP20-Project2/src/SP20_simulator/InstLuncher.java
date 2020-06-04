@@ -105,10 +105,12 @@ public class InstLuncher {
                     instList.add(count, temp);
                     System.out.println(temp);
                     instruction.get(count).instruction = temp;
+                    instruction.get(count).pcAddr = index;
                     index += instruction.get(count).format;
 
+
                     if(instruction.get(count).format >= 3)
-                        instruction.get(count).setDisp(instList.get(count).substring(3));
+                        instruction.get(count).setDisp(instList.get(count).substring(3), SA);
 
                 }
 
@@ -118,6 +120,17 @@ public class InstLuncher {
         }
 
     }
+    public String searchName(String inst){
+        int idx = instList.indexOf(inst);
+        String name = instruction.get(idx).name;
+        return name;
+    }
+
+    public Instruction searchInst(String inst){
+        int idx = instList.indexOf(inst);
+        Instruction returnInst = instruction.get(idx);
+        return returnInst;
+    }
 
     public ArrayList<String> getAll(){
         return instList;
@@ -125,8 +138,18 @@ public class InstLuncher {
     public int instTotal(){
         return instList.size();
     }
-    public String getOne(int index){
-        return instList.get(index);
+
+    public String getOne(int pcaddr){
+        String value = "";
+        int index = 0;
+        for(Instruction i : instruction){
+            if(i.pcAddr == pcaddr){
+                index = instruction.indexOf(i);
+                value = instruction.get(index).instruction;
+                return value;
+            }
+        }
+        return value;
     }
 
     // instruction 별로 동작을 수행하는 메소드를 정의
@@ -136,13 +159,90 @@ public class InstLuncher {
     }
 
     public void STL(Instruction instruction){
-        //L register 값을 가져온다.
+        //1. L register 값을 가져온다.
         int value = rMgr.getRegister(2);
-        //메모리 해당부분에 저장한다.
+        //2. 메모리 위치 (dis)
         int addr = instruction.getDisp();
-        rMgr.setMemory(addr, Integer.toString(value), 3);
-
+        //3. PC register 값을 가져온다.
+        //PC 값 설정
+        rMgr.setRegister(8, instruction.pcAddr+3);
+        int PC = rMgr.getRegister(8);
+        //4. 저장할 메모리 위치 설정
+        addr += PC;
+        //5. 해당 메모리에 L register 값을 저장한다.
+        rMgr.setMemoryCal(addr, String.format("%06d", value), 3);
     }
+    public void JSUB(Instruction instruction){
+        //1. PC 값을 L register에 저장
+        int value = rMgr.getRegister(8);
+        rMgr.setRegister(2, value);
+        //2. 메모리 값을 PC로 가져 옴
+        int addr = instruction.getDisp();
+        rMgr.setRegister(8, addr);
+    }
+    public void CLEAR(Instruction instruction){
+        //해당 레지스터 0으로 초기화
+        int regNum = Integer.parseInt(instruction.instruction.substring(2,3));
+        rMgr.setRegister(regNum, 0);
+
+        //PCreg값 정해주기
+        rMgr.setRegister(8, instruction.pcAddr+2);
+    }
+    public void LDT(Instruction instruction){
+        //1. 해당 메모리의 값을 가져와서
+        int value = instruction.getDisp();
+        //2. T register에 저장
+        rMgr.setRegister(5, value);
+        rMgr.setRegister(8, instruction.pcAddr+(instruction.instruction.length()/2));
+    }
+    public void TD(Instruction instruction){
+        //해당 메모리에 명시된 테스트 디바이스 이름 가져와서 setting
+        int addr = instruction.getDisp();
+        String tdName = rMgr.getMemory(addr,1);
+        rMgr.testDevice(tdName);
+
+        rMgr.setRegister(8, instruction.pcAddr+3);
+    }
+    public void JEQ(Instruction instruction){
+        //1. 같은지 비교를 해서 같으면  (SW register에 flag)
+        //2. 메모리에 있는 주소값을 PC에 넣는다.
+        if(rMgr.getRegister(9) == 0){
+            int addr = instruction.getDisp();
+            rMgr.setRegister(8, addr);
+        }
+        else
+            rMgr.setRegister(8, instruction.pcAddr+3);
+    }
+    public void RD(Instruction instruction){
+        //1. 메모리에 정의된 디바이스로부터 값을 읽어들여서
+        int addr = instruction.getDisp();
+        String rdName = rMgr.getMemory(addr,1);
+        char[] data = rMgr.readDevice(rdName, 1);
+        //2. A register에 저장한다.
+        int value = data[0];
+        rMgr.setRegister(0, value); //읽어온 글자의 아스키 코드 넣어줌
+
+        rMgr.setRegister(8, instruction.pcAddr+3);
+    }
+    public void COMPR(Instruction instruction){
+        //레지스터 2개를 비교 후 flag 셋팅 (같으면 0, 다르면 1)
+        int value1 = rMgr.getRegister(Integer.parseInt(instruction.instruction.substring(2,3)));
+        int value2 = rMgr.getRegister(Integer.parseInt(instruction.instruction.substring(3,4)));
+        if(value1 == value2)
+            rMgr.setRegister(9,0);
+        else
+            rMgr.setRegister(9,1);
+
+        rMgr.setRegister(8, instruction.pcAddr+2);
+    }
+    public void STCH(Instruction instruction){
+        //1. A-register의 오른쪽 값 2개 가져옴
+        //2. 해당 메모리에 저장 줌
+        //3. x-register 값 하나 증가
+        //3. 해당 메모리의 주소값에 x register 값 더해
+        rMgr.setRegister(8, instruction.pcAddr+2);
+    }
+
 
 }
 
@@ -162,6 +262,7 @@ class Instruction {
     public int disp;
     public int format;
     public String name;
+    public int pcAddr;
 
     public Instruction(){
         instruction = "";
@@ -171,12 +272,13 @@ class Instruction {
         disp = 0;
         format = 0;
         name = "";
+        pcAddr = 0;
     }
-    public void setDisp(String s){
+    public void setDisp(String s, int programAddr){
         int value = Integer.parseInt(s,16);;
         if(s.charAt(0) == 'F') //음수처리
             value = value - 4096; // 4096 = FFF + 1을 십진수로 변환한 값
-        this.disp = value;
+        this.disp = value + programAddr;
     }
     public int getDisp(){
         return this.disp;
@@ -190,6 +292,7 @@ class Instruction {
         else
             this.format = format;
     }
+
     public void setName(String name){
         this.name = name;
     }

@@ -40,7 +40,56 @@ public class SicSimulator {
 	 */
 	public void oneStep(String inst) {
 
-        vSim.setlogList(inst);
+
+        //1. PC register setting
+		//rMgr.setRegister(8, inst.length()/2);
+
+		//2. log textarea setting
+		addLog(inst);
+		//3. instruction 해석
+		String name = vSim.instLuncher.searchName(inst);
+		Instruction instruction = vSim.instLuncher.searchInst(inst);
+		if(name.equals("STL"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("JSUB"))
+			vSim.instLuncher.JSUB(instruction);
+		else if(name.equals("LDA"))
+			vSim.instLuncher.LDA(instruction);
+		else if(name.equals("COMP"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("JEQ"))
+			vSim.instLuncher.JEQ(instruction);
+		else if(name.equals("J"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("STA"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("CLEAR"))
+			vSim.instLuncher.CLEAR(instruction);
+		else if(name.equals("LDT"))
+			vSim.instLuncher.LDT(instruction);
+		else if(name.equals("TD"))
+			vSim.instLuncher.TD(instruction);
+		else if(name.equals("RD"))
+			vSim.instLuncher.RD(instruction);
+		else if(name.equals("COMPR"))
+			vSim.instLuncher.COMPR(instruction);
+		else if(name.equals("STCH"))
+			vSim.instLuncher.STCH(instruction);
+		else if(name.equals("TIXR"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("JLT"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("STX"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("RSUB"))
+			vSim.instLuncher.STL(instruction);
+		else if(name.equals("LDCH"))
+			vSim.instLuncher.STL(instruction);
+		else
+			System.out.println("undefine instruction");
+
+		// 위 과정에서 각 필요한 레지스터 값이 설정된다.
+
 	}
 
 
@@ -54,7 +103,10 @@ public class SicSimulator {
 	/**
 	 * 각 단계를 수행할 때 마다 관련된 기록을 남기도록 한다.
 	 */
-	public void addLog(String log) {
-
+	public void addLog(String inst) {
+		if(inst.length() != 0){
+			String log = vSim.instLuncher.searchName(inst);
+			vSim.setlogList(log);
+		}
 	}	
 }
