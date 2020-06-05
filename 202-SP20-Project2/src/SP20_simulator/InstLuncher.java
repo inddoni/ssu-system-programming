@@ -95,6 +95,7 @@ public class InstLuncher {
                 if(instT.instMap.containsKey(opc) == true) { //instruction 인 경우
                     instruction.get(count).setOpcode(opc); //opcode setting
                     int format = instT.instMap.get(opc).format;
+                    instruction.get(count).setSnixbpe(back);
                     instruction.get(count).setNixbpe(back); //nixbpe setting
                     instruction.get(count).setFormat(format); //format setting
                     if (format > 2)
@@ -125,13 +126,24 @@ public class InstLuncher {
     }
     public String searchName(String inst){
         int idx = instList.indexOf(inst);
-        String name = instruction.get(idx).name;
+        String name = "";
+        try{
+            name= instruction.get(idx).name;
+        }catch(ArrayIndexOutOfBoundsException e){
+            System.out.println("error: " + inst);
+        }
+
         return name;
     }
 
-    public Instruction searchInst(String inst){
-        int idx = instList.indexOf(inst);
-        Instruction returnInst = instruction.get(idx);
+    public Instruction searchInst(int index){
+
+        Instruction returnInst = null;
+        try{
+            returnInst = instruction.get(index);
+        }catch (ArrayIndexOutOfBoundsException e){
+            System.out.println("error");
+        }
         return returnInst;
     }
 
@@ -155,10 +167,40 @@ public class InstLuncher {
         return value;
     }
 
+    public int getOneIDX(int pcaddr){
+        String value = "";
+        int index = 0;
+        for(Instruction i : instruction){
+            if(i.pcAddr == pcaddr){
+                index = instruction.indexOf(i);
+                value = instruction.get(index).instruction;
+                return index;
+            }
+        }
+        return index;
+    }
     // instruction 별로 동작을 수행하는 메소드를 정의
     // ex) public void add(){...}
     public void LDA(Instruction instruction){
+        //1. 해당 메모리의 값을 가져와서 (상수인지 확인!!)
+        int value = 0;
+        //상수값 처리를 위한 분기문
+        String nixbpe = instruction.Snixbpe;
+        String im = nixbpe.substring(0,2);
+        if(im.equals("01")){
+            //instruction에서 값 가져옴
+            value = Integer.parseInt(instruction.instruction.substring(3), 16);
+        }
+        else{
+            //메모리에 접근해서 값 가져옴
+            int addr = instruction.getDisp();
+            String memV = rMgr.getMemory(addr, 3);
+            value = Integer.parseInt(memV, 16);
+        }
 
+        //2. A register에 저장
+        rMgr.setRegister(0, value);
+        rMgr.setRegister(8, instruction.pcAddr+3);
     }
 
     public void STL(Instruction instruction){
@@ -175,7 +217,7 @@ public class InstLuncher {
         int value = rMgr.getRegister(8);
         rMgr.setRegister(2, value);
         //2. 메모리 값을 PC로 가져 옴
-        int addr = instruction.getDisp();
+        int addr = Integer.parseInt(instruction.instruction.substring(3), 16);
         rMgr.setRegister(8, addr);
     }
     public void CLEAR(Instruction instruction){
@@ -187,11 +229,14 @@ public class InstLuncher {
         rMgr.setRegister(8, instruction.pcAddr+2);
     }
     public void LDT(Instruction instruction){
-        //1. 해당 메모리의 값을 가져와서
-        int value = instruction.getDisp();
+        int value = 0;
+        //메모리에서 값 가져오기
+        int addr = instruction.getDisp();
+        value = Integer.parseInt(rMgr.getMemory(addr,3),16);
         //2. T register에 저장
         rMgr.setRegister(5, value);
-        rMgr.setRegister(8, instruction.pcAddr+(instruction.instruction.length()/2));
+
+        rMgr.setRegister(8, instruction.pcAddr+instruction.instruction.length()/2);
     }
     public void TD(Instruction instruction){
         //해당 메모리에 명시된 테스트 디바이스 이름 가져와서 setting
@@ -216,9 +261,30 @@ public class InstLuncher {
         int addr = instruction.getDisp();
         String rdName = rMgr.getMemory(addr,1);
         char[] data = rMgr.readDevice(rdName, 1);
+        System.out.println(data);
         //2. A register에 저장한다.
-        int value = data[0];
-        rMgr.setRegister(0, value); //읽어온 글자의 아스키 코드 넣어줌
+        String origin = String.format("%06x", rMgr.getRegister(0));
+        String right = Integer.toHexString(data[0]);
+        right = origin.substring(0, 4) + right;
+
+        rMgr.setRegister(0, Integer.parseInt(right,16)); //읽어온 글자의 아스키 코드 넣어줌
+
+        rMgr.setRegister(8, instruction.pcAddr+3);
+    }
+    public void WD(Instruction instruction){
+        //1. A-register의 오른쪽 값을 읽어들인다.
+        String data = String.format("%06X", rMgr.getRegister(0));
+        //16진수로 받아온 것을 10진수로 변환
+        int v = Integer.parseInt(data.substring(4), 16);
+        //10진수를 char로 변환
+        char d = (char)v;
+
+
+        //2. 메모리에 정의된 장치가져오기
+        int addr = instruction.getDisp();
+        String wrDevice = rMgr.getMemory(addr,1);
+        //3. 장치에 데이터 쓰기
+        rMgr.writeDevice(wrDevice, d,3);
 
         rMgr.setRegister(8, instruction.pcAddr+3);
     }
@@ -234,30 +300,36 @@ public class InstLuncher {
         rMgr.setRegister(8, instruction.pcAddr+2);
     }
     public void STCH(Instruction instruction){
-        //1. A-register의 오른쪽 값 2개 가져옴
-        //2. 해당 메모리에 저장 줌
-        //3. x-register 값 하나 증가
-        //3. 해당 메모리의 주소값에 x register 값 더해
-        rMgr.setRegister(8, instruction.pcAddr+2);
+        //1. A-register의 오른쪽 값 가져옴
+        String right = String.format("%06x", rMgr.getRegister(0)).substring(4);
+        int aReg = Integer.parseInt(right, 16);
+
+        //2. 해당 메모리 + xregister값에 저장 줌값
+        int addr = instruction.getDisp() + rMgr.getRegister(1);
+        rMgr.setMemoryCal(addr, Integer.toString(aReg), 1);
+        rMgr.setRegister(8, instruction.pcAddr+4);
     }
     public void TIXR(Instruction instruction){
-
+        //1. x값 증가해서 다시 x-register에 넣어줌
+        int value = rMgr.getRegister(1);
+        value += 1;
+        rMgr.setRegister(1, value);
+        //2. x값과 레지스터 값 비교해서 flag setting
+        int regValue = rMgr.getRegister(Integer.parseInt(instruction.instruction.substring(2,3)));
+        if(value == regValue)
+            rMgr.setRegister(9,0);
+        else
+            rMgr.setRegister(9,1);
         rMgr.setRegister(8, instruction.pcAddr+2);
     }
     public void COMP(Instruction instruction){
         //1. A register와 메모리 값을 비교한다.
-        int value;
         int aReg = rMgr.getRegister(0);
-        //상수값 처리를 위한 분기문
-        if(instruction.Snixbpe.substring(0,2) == "01"){
-            //instruction에서 값 가져옴
-            value = Integer.parseInt(instruction.instruction.substring(3), 16);
-        }
-        else{
-            //메모리에 접근해서 값 가져옴
-            int addr = instruction.getDisp();
-            value = Integer.parseInt(rMgr.getMemory(addr, 3));
-        }
+        //상수값 처리
+        //instruction에서 값 가져옴
+        int value = Integer.parseInt(instruction.instruction.substring(3), 16);
+
+
         if(value == aReg)
             rMgr.setRegister(9, 0);
         else
@@ -296,17 +368,28 @@ public class InstLuncher {
         int addr = instruction.getDisp();
         rMgr.setMemoryCal(addr, String.format("%06d", value), 3);
 
-        rMgr.setRegister(8, instruction.pcAddr+3);
+        rMgr.setRegister(8, instruction.pcAddr+4);
     }
     public void RSUB(Instruction instruction){
         //1. L reg 값 가져와서
         //2. PC reg에 넣기
         int value = rMgr.getRegister(2);
-        rMgr.setRegister(8, value);
+        rMgr.setRegister(8, value+4);
     }
     public void LDCH(Instruction instruction){
+        //1. 메모리의 값을 가져온다.
 
-        rMgr.setRegister(8, instruction.pcAddr+2);
+
+        int addr = instruction.getDisp() + rMgr.getRegister(1);
+        String s = rMgr.getMemory(addr,1);
+
+        //2. A-register의 오른쪽에 값을 저장한다.
+        String origin = String.format("%06x", rMgr.getRegister(0));
+        String right = origin.substring(0,4) + s;
+        rMgr.setRegister(0, Integer.parseInt(right, 16));
+
+
+        rMgr.setRegister(8, instruction.pcAddr+4);
     }
 }
 
@@ -337,6 +420,9 @@ class Instruction {
         format = 0;
         name = "";
         pcAddr = 0;
+    }
+    public void setSnixbpe(String s){
+        this.Snixbpe = s;
     }
     public void setDisp(String s, int programAddr, int count){
 
@@ -369,7 +455,7 @@ class Instruction {
     }
 
     public void setNixbpe(String nixbpe) {
-        this.Snixbpe = nixbpe;
+        //this.Snixbpe = nixbpe;
         if(nixbpe != ""){
             this.nixbpe += nixbpe.charAt(0) - '0' * nFlag;
             this.nixbpe += nixbpe.charAt(1) - '0' * iFlag;

@@ -38,7 +38,7 @@ public class SicSimulator {
 	/**
 	 * 1개의 instruction이 수행된 모습을 보인다. 
 	 */
-	public void oneStep(String inst) {
+	public void oneStep(String inst, int index) {
 
 
         //1. PC register setting
@@ -48,7 +48,8 @@ public class SicSimulator {
 		addLog(inst);
 		//3. instruction 해석
 		String name = vSim.instLuncher.searchName(inst);
-		Instruction instruction = vSim.instLuncher.searchInst(inst);
+		Instruction instruction = vSim.instLuncher.searchInst(index);
+
 		if(name.equals("STL"))
 			vSim.instLuncher.STL(instruction);
 		else if(name.equals("JSUB"))
@@ -85,8 +86,16 @@ public class SicSimulator {
 			vSim.instLuncher.RSUB(instruction);
 		else if(name.equals("LDCH"))
 			vSim.instLuncher.LDCH(instruction);
-		else
+		else if(name.equals("WD"))
+			vSim.instLuncher.WD(instruction);
+		else{
 			System.out.println("undefine instruction");
+			addLog("fin.");
+			rMgr.closeDevice();
+		}
+
+
+
 
 		// 위 과정에서 각 필요한 레지스터 값이 설정된다.
 
@@ -105,8 +114,17 @@ public class SicSimulator {
 	 */
 	public void addLog(String inst) {
 		if(inst.length() != 0){
-			String log = vSim.instLuncher.searchName(inst);
-			vSim.setlogList(log);
+			if(inst.equals("fin.")){
+				vSim.setlogList(inst);
+				vSim.oneexe.setEnabled(false);
+				vSim.allexe.setEnabled(false);
+			}
+			else{
+				String log = vSim.instLuncher.searchName(inst);
+				vSim.setlogList(log);
+			}
+
 		}
+
 	}	
 }

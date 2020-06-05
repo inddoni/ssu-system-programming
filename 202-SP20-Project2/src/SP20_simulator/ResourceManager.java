@@ -1,13 +1,7 @@
 package SP20_simulator;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-
+import java.io.*;
+import java.util.*;
 
 
 /**
@@ -39,6 +33,7 @@ public class ResourceManager{
 	String[] memory = new String[65536]; // String으로 수정해서 사용하여도 무방함.
 	int[] register = new int[10];
 	double register_F;
+	String nowDev = "";
 
 	static int endRecord = 0;
 	ArrayList<String> pSectionName; //각 section의 이름
@@ -76,7 +71,10 @@ public class ResourceManager{
 	 * 프로그램을 종료하거나 연결을 끊을 때 호출한다.
 	 */
 	public void closeDevice() {
-		
+		for(String s : deviceManager.keySet()){
+			Scanner sc = (Scanner)deviceManager.get(s);
+			sc.close();
+		}
 	}
 	
 	/**
@@ -87,8 +85,9 @@ public class ResourceManager{
 	public void testDevice(String devName) {
 		try{
 			File file = new File(devName+".txt");
-			FileReader fos = new FileReader(file);
-			deviceManager.put(devName,fos);
+			nowDev = devName;
+			Scanner scanner = new Scanner(file);
+			deviceManager.put(devName,scanner);
 			setRegister(9, 1); //정상 flag 셋팅
 		} catch(FileNotFoundException e){
 			setRegister(9, 0); //비정상 오류 flag
@@ -107,11 +106,39 @@ public class ResourceManager{
 	 * @return 가져온 데이터
 	 */
 	public char[] readDevice(String devName, int num){
-		char[] data = new char[50];
+		char[] data = new char[100];
 		try{
-			FileReader rName = (FileReader) deviceManager.get(devName);
-			for(int i = 0; i < num; i++){
-				data[i] = (char)(rName.read()+'0');
+			Scanner sc = (Scanner)deviceManager.get(devName);
+			nowDev = devName;
+			String line = "";
+			if(sc.hasNext()){
+				line = sc.nextLine();
+				for(int i = 0; i < num; i++){
+					data[i] += line.charAt(i);
+				}
+			}
+
+			//file 에 읽은만큼 삭제
+			String remain = "";
+			Boolean re = false;
+			for(int i = 0; i < line.length(); i++){
+				re = true;
+				if(data[i] == line.charAt(i)){
+					continue;
+				}
+				remain += line.substring(i,i+1);
+			}
+
+			if(re){
+				try{
+					String fName = devName+".txt";
+					File file = new File(fName);
+					FileWriter writer = new FileWriter(file, false);
+					writer.write(remain);
+					writer.close();
+				}catch (FileNotFoundException e){
+					e.printStackTrace();
+				}
 			}
 		}catch (Exception e){
 			e.printStackTrace();
@@ -125,8 +152,21 @@ public class ResourceManager{
 	 * @param data 보내는 데이터
 	 * @param num 보내는 글자의 개수
 	 */
-	public void writeDevice(String devName, char[] data, int num){
-		
+	public void writeDevice(String devName, char data, int num){
+		try{
+			Scanner sc = (Scanner)deviceManager.get(devName);
+			String fName = devName+".txt";
+			File file = new File(fName);
+			FileWriter writer = new FileWriter(file, true);
+
+			nowDev = devName;
+
+			writer.write(data);
+
+			writer.close();
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -185,10 +225,13 @@ public class ResourceManager{
 	public void setMemoryCal(int locate, String data, int num){
 
 		int value = Integer.parseInt(data);//새로 저장할 값은 10진수
-		String store = String.format("%06d", value);
-
+		String store = "";
+		if(num == 3)
+			store=String.format("%06x", value);
+		else if(num==1)
+			store=String.format("%02x", value);
 		//set replace memory
-		for(int i = 0; i < 3; i++)
+		for(int i = 0; i < num; i++)
 			memory[locate+i] = store.substring(i*2,(i*2)+2);
 
 	}

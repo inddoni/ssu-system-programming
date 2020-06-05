@@ -86,11 +86,13 @@ public class VisualSimulator extends JFrame {
 			nowStep = 0;
 		}
 		if(nowStep < instLuncher.instList.size()){
-			String inst = instLuncher.getOne(resourceManager.getRegister(8));
+			int pc = resourceManager.getRegister(8);
+			String inst = instLuncher.getOne(pc);
+			int index = instLuncher.getOneIDX(pc);
 			this.setinstList(inst);
 
 			//insturction 수행 요청 => sic Simulator
-			sicSimulator.oneStep(inst);
+			sicSimulator.oneStep(inst, index);
 			update();
 		}
 
@@ -107,16 +109,20 @@ public class VisualSimulator extends JFrame {
 			instLuncher.setInstruction();
 			isInstLoad = true;
 			totalList = instLuncher.instTotal();
-			oneexe.setEnabled(false);
+			//oneexe.setEnabled(false);
 		}
 
 		if(nowStep < instLuncher.instList.size()){
-			ArrayList<String> getAllinst = instLuncher.getAll();
-			for(int i = nowStep; i < instLuncher.instList.size(); i++){
-				String s = instLuncher.getOne(i);
-				setinstList(s);
+			while(this.oneexe.isEnabled()){
+				int pc = resourceManager.getRegister(8);
+				String inst = instLuncher.getOne(pc);
+				int index = instLuncher.getOneIDX(pc);
+				this.setinstList(inst);
+
+				//insturction 수행 요청 => sic Simulator
+				sicSimulator.oneStep(inst, index);
+				update();
 			}
-			nowStep = instLuncher.instList.size();
 		}
 
 	};
@@ -125,7 +131,6 @@ public class VisualSimulator extends JFrame {
 	 * 화면을 최신값으로 갱신하는 역할을 수행한다.
 	 */
 	public void update(){
-//		setinstList();
 		setHeader();
 		setEnd();
 		setAreg();
@@ -137,6 +142,8 @@ public class VisualSimulator extends JFrame {
 		setFreg();
 		setPCreg();
 		setSWreg();
+		setDevice();
+		setTargetAddr(resourceManager.getRegister(8));
 	};
 
 
@@ -195,12 +202,9 @@ public class VisualSimulator extends JFrame {
 
 
 	public void setTargetAddr(int addr){
-		pn9Text.setText(Integer.toString(addr)); //target address
+		pn9Text.setText(String.format("%d", addr)); //target address
 	}
-	public void setinstList(){
-		ta.append(resourceManager.getMemory(0,3) + "\n");
-		ta.setCaretPosition(ta.getDocument().getLength());
-	}
+
 	public void setinstList(String inst){
 		ta.append(inst.toUpperCase() + "\n");
 		ta.setCaretPosition(ta.getDocument().getLength());
@@ -209,12 +213,14 @@ public class VisualSimulator extends JFrame {
 		ta2.append(log + "\n");
 		ta2.setCaretPosition(ta2.getDocument().getLength());
 	}
-
+	public void setDevice(){
+		pnDivText.setText(resourceManager.nowDev);
+	}
 
 	public void setHeader(){
 		pn2Text.setText(resourceManager.pSectionName.get(0)); //program name
 		pn3Text.setText(String.format("%06d",resourceManager.pSectionAddr.get(0))); //GUI program Start Address link @pn3Text
-		pn4Text.setText(String.format("%X",resourceManager.pSectionLength.get(0))); //GUI program length link @pn4Text
+		pn4Text.setText(String.format("%06X",resourceManager.pSectionLength.get(0))); //GUI program length link @pn4Text
 	}
 	public void setEnd(){
 		pn7Text.setText(String.format("%06d",resourceManager.endRecord)); //end record
@@ -222,34 +228,34 @@ public class VisualSimulator extends JFrame {
 	}
 	public void setAreg(){
 		pnAText1.setText(Integer.toString(resourceManager.register[0]));
-		pnAText2.setText(String.format("%X", resourceManager.register[0]));
+		pnAText2.setText(String.format("%06X", resourceManager.register[0]));
 	}
 	public void setXreg(){
 		pnXText1.setText(Integer.toString(resourceManager.register[1]));
-		pnXText2.setText(String.format("%X", resourceManager.register[1]));
+		pnXText2.setText(String.format("%06X", resourceManager.register[1]));
 	}
 	public void setLreg(){
 		pnLText1.setText(Integer.toString(resourceManager.register[2]));
-		pnLText2.setText(String.format("%X", resourceManager.register[2]));
+		pnLText2.setText(String.format("%06X", resourceManager.register[2]));
 	}
 	public void setBreg(){
 		pnBText1.setText(Integer.toString(resourceManager.register[3]));
-		pnBText2.setText(String.format("%X", resourceManager.register[3]));
+		pnBText2.setText(String.format("%06X", resourceManager.register[3]));
 	}
 	public void setSreg(){
 		pnSText1.setText(Integer.toString(resourceManager.register[4]));
-		pnSText2.setText(String.format("%X", resourceManager.register[4]));
+		pnSText2.setText(String.format("%06X", resourceManager.register[4]));
 	}
 	public void setTreg(){
 		pnTText1.setText(Integer.toString(resourceManager.register[5]));
-		pnTText2.setText(String.format("%X", resourceManager.register[5]));
+		pnTText2.setText(String.format("%06X", resourceManager.register[5]));
 	}
 	public void setFreg(){
 		pnFText1.setText(Double.toString(resourceManager.register_F));
 	}
 	public void setPCreg(){
-		pnPCText1.setText(Integer.toString(resourceManager.register[8]));
-		pnPCText2.setText(String.format("%X", resourceManager.register[8]));
+		pnPCText1.setText(String.format("%d", resourceManager.register[8]));
+		pnPCText2.setText(String.format("%06X", resourceManager.register[8]));
 	}
 	public void setSWreg(){
 		pnSWText1.setText(Integer.toString(resourceManager.register[9]));
